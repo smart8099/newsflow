@@ -1,0 +1,132 @@
+[
+  {
+    "model": "news.category",
+    "pk": 1,
+    "fields": {
+      "name": "Technology",
+      "slug": "technology",
+      "description": "Latest technology news, innovations, and digital trends. Covering AI, software, hardware, and tech industry updates.",
+      "color": "#4F46E5",
+      "icon": "💻",
+      "is_active": true,
+      "sort_order": 1
+    }
+  },
+  {
+    "model": "news.category",
+    "pk": 2,
+    "fields": {
+      "name": "Business",
+      "slug": "business",
+      "description": "Business news, market updates, economic insights, and corporate developments.",
+      "color": "#059669",
+      "icon": "💼",
+      "is_active": true,
+      "sort_order": 2
+    }
+  },
+  {
+    "model": "news.category",
+    "pk": 3,
+    "fields": {
+      "name": "Politics",
+      "slug": "politics",
+      "description": "Political developments, policy changes, government news, and electoral coverage.",
+      "color": "#DC2626",
+      "icon": "🏛️",
+      "is_active": true,
+      "sort_order": 3
+    }
+  },
+  {
+    "model": "news.category",
+    "pk": 4,
+    "fields": {
+      "name": "Sports",
+      "slug": "sports",
+      "description": "Sports news, scores, athletic achievements, and sporting events coverage.",
+      "color": "#EA580C",
+      "icon": "⚽",
+      "is_active": true,
+      "sort_order": 4
+    }
+  },
+  {
+    "model": "news.category",
+    "pk": 5,
+    "fields": {
+      "name": "Entertainment",
+      "slug": "entertainment",
+      "description": "Entertainment news, celebrity updates, movies, music, and cultural events.",
+      "color": "#9333EA",
+      "icon": "🎬",
+      "is_active": true,
+      "sort_order": 5
+    }
+  },
+  {
+    "model": "news.category",
+    "pk": 6,
+    "fields": {
+      "name": "Health",
+      "slug": "health",
+      "description": "Health news, medical breakthroughs, wellness tips, and healthcare developments.",
+      "color": "#10B981",
+      "icon": "🏥",
+      "is_active": true,
+      "sort_order": 6
+    }
+  },
+  {
+    "model": "news.category",
+    "pk": 7,
+    "fields": {
+      "name": "Science",
+      "slug": "science",
+      "description": "Scientific discoveries, research findings, space exploration, and innovation.",
+      "color": "#0891B2",
+      "icon": "🔬",
+      "is_active": true,
+      "sort_order": 7
+    }
+  },
+  {
+    "model": "news.category",
+    "pk": 8,
+    "fields": {
+      "name": "World",
+      "slug": "world",
+      "description": "International news, global affairs, and worldwide developments.",
+      "color": "#7C3AED",
+      "icon": "🌍",
+      "is_active": true,
+      "sort_order": 8
+    }
+  },
+  {
+    "model": "news.category",
+    "pk": 9,
+    "fields": {
+      "name": "General",
+      "slug": "general",
+      "description": "General news and current events from around the world.",
+      "color": "#6B7280",
+      "icon": "📰",
+      "is_active": true,
+      "sort_order": 9
+    }
+  },
+  {
+    "model": "news.category",
+    "pk": 10,
+    "fields": {
+      "name": "Environment",
+      "slug": "environment",
+      "description": "Environmental news, climate change, sustainability, and ecological developments.",
+      "color": "#16A34A",
+      "icon": "🌱",
+      "is_active": true,
+      "sort_order": 10
+    }
+  }
+]

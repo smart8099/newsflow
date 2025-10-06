@@ -1,0 +1,116 @@
+[
+  {
+    "model": "users.userprofile",
+    "pk": 1,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440201",
+      "user": 1,
+      "theme_preference": "light",
+      "reading_speed": 220,
+      "notification_preferences": {
+        "email_notifications": true,
+        "breaking_news": true,
+        "daily_digest": true,
+        "weekly_summary": false,
+        "article_recommendations": true,
+        "category_updates": true
+      },
+      "is_onboarded": true
+    }
+  },
+  {
+    "model": "users.userprofile",
+    "pk": 2,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440202",
+      "user": 2,
+      "theme_preference": "dark",
+      "reading_speed": 180,
+      "notification_preferences": {
+        "email_notifications": true,
+        "breaking_news": false,
+        "daily_digest": true,
+        "weekly_summary": true,
+        "article_recommendations": true,
+        "category_updates": false
+      },
+      "is_onboarded": true
+    }
+  },
+  {
+    "model": "users.userprofile",
+    "pk": 3,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440203",
+      "user": 3,
+      "theme_preference": "system",
+      "reading_speed": 250,
+      "notification_preferences": {
+        "email_notifications": false,
+        "breaking_news": true,
+        "daily_digest": false,
+        "weekly_summary": false,
+        "article_recommendations": true,
+        "category_updates": true
+      },
+      "is_onboarded": true
+    }
+  },
+  {
+    "model": "users.userprofile",
+    "pk": 4,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440204",
+      "user": 4,
+      "theme_preference": "light",
+      "reading_speed": 200,
+      "notification_preferences": {
+        "email_notifications": true,
+        "breaking_news": true,
+        "daily_digest": true,
+        "weekly_summary": true,
+        "article_recommendations": true,
+        "category_updates": true
+      },
+      "is_onboarded": true
+    }
+  },
+  {
+    "model": "users.userprofile",
+    "pk": 5,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440205",
+      "user": 5,
+      "theme_preference": "dark",
+      "reading_speed": 190,
+      "notification_preferences": {
+        "email_notifications": true,
+        "breaking_news": false,
+        "daily_digest": true,
+        "weekly_summary": false,
+        "article_recommendations": false,
+        "category_updates": true
+      },
+      "is_onboarded": false
+    }
+  },
+  {
+    "model": "users.userprofile",
+    "pk": 6,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440206",
+      "user": 6,
+      "theme_preference": "dark",
+      "reading_speed": 300,
+      "notification_preferences": {
+        "email_notifications": true,
+        "breaking_news": true,
+        "daily_digest": true,
+        "weekly_summary": true,
+        "article_recommendations": false,
+        "category_updates": false
+      },
+      "is_onboarded": true
+    }
+  }
+]

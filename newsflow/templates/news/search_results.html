@@ -1,0 +1,133 @@
+{% extends "news/base_news.html" %}
+
+{% load i18n humanize %}
+
+{% block news_title %}
+  {% if query %}
+    {% blocktrans with query=query %}Search Results for "{{ query }}"{% endblocktrans %} - NewsFlow
+  {% else %}
+    {% trans "Search News" %} - NewsFlow
+  {% endif %}
+{% endblock news_title %}
+{% block news_content %}
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Search Header -->
+    <div class="mb-8">
+      {% if query %}
+        <div class="flex items-center justify-between mb-4">
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+            {% blocktrans with query=query count=paginator.count %}
+            {{ count }} results for "{{ query }}"
+          {% endblocktrans %}
+          </h1>
+          <div class="text-sm text-gray-500 dark:text-slate-400">{% trans "Search type:" %} {{ search_type|capfirst }}</div>
+        </div>
+        <!-- Search Stats -->
+        <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-slate-400 mb-6">
+          <span>⏱️ {% trans "Search completed in" %} &lt;1s</span>
+          {% if paginator.count > 0 %}
+            <span>📄 {% trans "Showing" %} {{ page_obj.start_index }}-{{ page_obj.end_index }} {% trans "of" %} {{ paginator.count }}</span>
+          {% endif %}
+        </div>
+      {% else %}
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">{% trans "Advanced News Search" %}</h1>
+        <p class="text-gray-600 dark:text-slate-400 mb-6">
+          {% trans "Search through thousands of articles with advanced filters and sorting options." %}
+        </p>
+      {% endif %}
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Search Filters Sidebar -->
+      <div class="lg:col-span-1 order-2 lg:order-1">
+        {% include 'news/partials/filter_sidebar.html' with page_type="search" show_sort=False show_category_filter=True show_source_filter=True show_sentiment=True filter_categories=category_facets filter_sources=source_facets %}
+      </div>
+      <!-- Search Results -->
+      <div class="lg:col-span-3 order-1 lg:order-2">
+        {% if articles %}
+          <!-- Results Grid -->
+          <div class="space-y-4">
+            {% for article in articles|slice:":6" %}
+              {% include 'news/partials/news_card_compact.html' %}
+            {% endfor %}
+          </div>
+          <!-- HTMX Infinite Scroll Container -->
+          <div id="articles-container" class="space-y-4 mt-6">
+            <!-- Additional search results will be loaded here -->
+          </div>
+          <!-- HTMX Load More Trigger -->
+          <div class="text-center pt-8"
+               hx-get="{% url 'news:load-more' %}?page=2&type=search&q={{ query|urlencode }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sentiment %}&sentiment={{ request.GET.sentiment }}{% endif %}{% if request.GET.source %}&source={{ request.GET.source }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}"
+               hx-target="#articles-container"
+               hx-swap="beforeend"
+               hx-trigger="revealed"
+               hx-indicator="#loading-indicator">
+            <div class="flex items-center justify-center">
+              <div class="spinner w-6 h-6 mr-3"></div>
+              <span class="text-gray-600 dark:text-slate-400">{% trans "Loading more results..." %}</span>
+            </div>
+          </div>
+        {% elif query %}
+          <!-- No Results -->
+          <div class="text-center py-16">
+            <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gray-100 dark:bg-slate-700 mb-6">
+              <svg class="h-8 w-8 text-gray-400 dark:text-slate-500"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+                </path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">{% trans "No results found" %}</h3>
+            <p class="text-gray-600 dark:text-slate-400 mb-6">
+              {% blocktrans with query=query %}
+              We couldn't find any articles matching "{{ query }}". Try adjusting your search terms or filters.
+            {% endblocktrans %}
+            </p>
+            <div class="space-y-2">
+              <p class="text-sm text-gray-500 dark:text-slate-400">{% trans "Suggestions:" %}</p>
+              <ul class="text-sm text-gray-600 dark:text-slate-400 space-y-1">
+                <li>• {% trans "Check your spelling" %}</li>
+                <li>• {% trans "Try more general keywords" %}</li>
+                <li>• {% trans "Remove some filters" %}</li>
+                <li>• {% trans "Try a different search type" %}</li>
+              </ul>
+            </div>
+          </div>
+        {% else %}
+          <!-- Search Landing -->
+          <div class="text-center py-16">
+            <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900 mb-6">
+              <svg class="h-8 w-8 text-primary-600 dark:text-primary-400"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+                </path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">{% trans "Start your search" %}</h3>
+            <p class="text-gray-600 dark:text-slate-400 mb-6">
+              {% trans "Enter keywords in the search box or use the filters to find specific articles." %}
+            </p>
+            <!-- Popular Searches -->
+            {% if trending_searches %}
+              <div class="mb-6">
+                <p class="text-sm text-gray-500 dark:text-slate-400 mb-3">{% trans "Popular searches:" %}</p>
+                <div class="flex flex-wrap gap-2 justify-center">
+                  {% for search in trending_searches %}
+                    <a href="{% url 'news:search' %}?q={{ search.normalized_query|urlencode }}"
+                       class="text-xs bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-800 px-3 py-1 rounded-full transition-colors">
+                      {{ search.normalized_query }}
+                    </a>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+            <a href="{% url 'news:home' %}" class="btn btn-primary">{% trans "Browse all news" %}</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock news_content %}

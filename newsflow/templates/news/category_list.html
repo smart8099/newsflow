@@ -1,0 +1,206 @@
+{% extends "news/base_news.html" %}
+
+{% load i18n humanize %}
+
+{% block news_title %}
+  {{ category_name }} News - NewsFlow
+{% endblock news_title %}
+{% block news_content %}
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Category Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+          <span class="mr-3">
+            {% if current_category == 'technology' %}
+              💻
+            {% elif current_category == 'business' %}
+              💼
+            {% elif current_category == 'politics' %}
+              🏛️
+            {% elif current_category == 'sports' %}
+              ⚽
+            {% elif current_category == 'entertainment' %}
+              🎬
+            {% elif current_category == 'health' %}
+              🏥
+            {% elif current_category == 'science' %}
+              🔬
+            {% elif current_category == 'world' %}
+              🌍
+            {% elif current_category == 'general' %}
+              📰
+            {% else %}
+              🏠
+            {% endif %}
+          </span>
+          {{ category_name }}
+        </h1>
+        <!-- Article Count -->
+        <div class="text-sm text-gray-500 dark:text-slate-400">
+          {{ paginator.count|intcomma }} {% trans "articles found" %}
+        </div>
+      </div>
+      <!-- Category Description -->
+      <p class="text-gray-600 dark:text-slate-400 mb-6">
+        {% if current_category == 'technology' %}
+          {% trans "Stay updated with the latest technology news, innovations, and digital trends." %}
+        {% elif current_category == 'business' %}
+          {% trans "Get the latest business news, market updates, and economic insights." %}
+        {% elif current_category == 'politics' %}
+          {% trans "Follow political developments, policy changes, and government news." %}
+        {% elif current_category == 'sports' %}
+          {% trans "Catch up on sports news, scores, and athletic achievements." %}
+        {% elif current_category == 'entertainment' %}
+          {% trans "Discover entertainment news, celebrity updates, and cultural events." %}
+        {% elif current_category == 'health' %}
+          {% trans "Read about health news, medical breakthroughs, and wellness tips." %}
+        {% elif current_category == 'science' %}
+          {% trans "Explore scientific discoveries, research findings, and innovation." %}
+        {% elif current_category == 'world' %}
+          {% trans "Stay informed about global news and international affairs." %}
+        {% elif current_category == 'general' %}
+          {% trans "Browse general news and current events from around the world." %}
+        {% else %}
+          {% trans "Browse all news categories and stay informed about current events." %}
+        {% endif %}
+      </p>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Filters Sidebar -->
+      <div class="lg:col-span-1 order-2 lg:order-1">
+        {% include 'news/partials/filter_sidebar.html' with page_type="category" show_sort=True show_category_filter=False show_source_filter=True show_sentiment=True filter_sources=available_sources %}
+        <!-- Trending in Category -->
+        {% if trending_in_category %}
+          <div class="card mt-6">
+            <div class="card-header">
+              <h3 class="font-semibold text-gray-900 dark:text-white flex items-center">
+                <span class="mr-2">🔥</span>
+                {% trans "Trending in" %} {{ category_name }}
+              </h3>
+            </div>
+            <div class="card-body p-0">
+              {% for article in trending_in_category %}
+                <div class="border-b border-gray-200 dark:border-slate-700 last:border-b-0">
+                  <a href="{{ article.url }}"
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     onclick="trackArticleClick({{ article.id }})"
+                     class="block p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                    <h4 class="text-sm font-medium text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors leading-tight mb-1">
+                      {{ article.title|truncatewords:10 }}
+                    </h4>
+                    <div class="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400">
+                      <span>{{ article.source.name|truncatewords:1 }}</span>
+                      <span>👁 {{ article.view_count|intcomma }}</span>
+                    </div>
+                  </a>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+      <!-- Articles Grid -->
+      <div class="lg:col-span-3 order-1 lg:order-2">
+        {% if articles %}
+          <!-- Active Filters Display -->
+          {% if applied_filters.sentiment or applied_filters.source or applied_filters.date_from or applied_filters.date_to %}
+            <div class="mb-6">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-sm text-gray-600 dark:text-slate-400">{% trans "Active filters:" %}</span>
+                {% if applied_filters.sentiment %}
+                  <span class="badge bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                    {% if applied_filters.sentiment == 'positive' %}
+                      😊 {% trans "Positive" %}
+                    {% elif applied_filters.sentiment == 'negative' %}
+                      😞 {% trans "Negative" %}
+                    {% else %}
+                      😐 {% trans "Neutral" %}
+                    {% endif %}
+                  </span>
+                {% endif %}
+                {% if applied_filters.source %}
+                  <span class="badge bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                    {% for source in available_sources %}
+                      {% if source.id|stringformat:"s" == applied_filters.source %}{{ source.name }}{% endif %}
+                    {% endfor %}
+                  </span>
+                {% endif %}
+                {% if applied_filters.date_from %}
+                  <span class="badge bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                    {% trans "From" %} {{ applied_filters.date_from }}
+                  </span>
+                {% endif %}
+                {% if applied_filters.date_to %}
+                  <span class="badge bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-300">
+                    {% trans "To" %} {{ applied_filters.date_to }}
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+          <!-- Articles Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for article in articles|slice:":6" %}
+              {% include 'news/partials/news_card_secondary.html' %}
+            {% endfor %}
+          </div>
+          <!-- HTMX Infinite Scroll Container -->
+          <div id="articles-container"
+               class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+            <!-- Additional articles will be loaded here via HTMX -->
+          </div>
+          <!-- Initial HTMX Load More Trigger -->
+          {% if articles|length >= 6 %}
+            <div class="w-full text-center pt-8"
+                 id="load-more-trigger-2"
+                 style="grid-column: 1 / -1">
+              <div hx-get="{% url 'news:load-more' %}?page=2&type=category&category={{ current_category }}{% if request.GET.sentiment %}&sentiment={{ request.GET.sentiment }}{% endif %}{% if request.GET.source %}&source={{ request.GET.source }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}"
+                   hx-target="#articles-container"
+                   hx-swap="beforeend"
+                   hx-trigger="revealed"
+                   class="flex items-center justify-center">
+                <div class="spinner w-6 h-6 mr-3"></div>
+                <span class="text-gray-600 dark:text-slate-400">{% trans "Loading more articles..." %}</span>
+              </div>
+            </div>
+          {% endif %}
+        {% else %}
+          <!-- No Articles -->
+          <div class="text-center py-16">
+            <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gray-100 dark:bg-slate-700 mb-6">
+              <svg class="h-8 w-8 text-gray-400 dark:text-slate-500"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z">
+                </path>
+              </svg>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">{% trans "No articles found" %}</h3>
+            <p class="text-gray-600 dark:text-slate-400 mb-6">
+              {% if applied_filters.sentiment or applied_filters.source or applied_filters.date_from or applied_filters.date_to %}
+                {% trans "Try adjusting your filters to see more articles." %}
+              {% else %}
+                {% trans "There are no articles available in this category yet." %}
+              {% endif %}
+            </p>
+            <div class="space-x-3">
+              {% if applied_filters.sentiment or applied_filters.source or applied_filters.date_from or applied_filters.date_to %}
+                <a href="{% url 'news:category' current_category %}"
+                   class="btn btn-primary">{% trans "Clear filters" %}</a>
+              {% endif %}
+              <a href="{% url 'news:home' %}" class="btn btn-secondary">{% trans "Browse all news" %}</a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock news_content %}
+{% block mobile_sidebar %}
+  {% with show_mobile_filters=True page_type="category" show_sort=True show_category_filter=False show_source_filter=True show_sentiment=True filter_sources=available_sources current_category=current_category %}
+    {% include 'news/partials/mobile_sidebar_sheet.html' %}
+  {% endwith %}
+{% endblock mobile_sidebar %}

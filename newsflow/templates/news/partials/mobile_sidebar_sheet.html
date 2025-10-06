@@ -1,0 +1,710 @@
+{% load i18n humanize %}
+
+<!-- Mobile Bottom Sheet for Sidebar -->
+<div id="mobile-sidebar-sheet"
+     class="fixed inset-0 z-50 hidden lg:hidden"
+     aria-labelledby="sidebar-sheet-title"
+     role="dialog"
+     aria-modal="true">
+  <!-- Backdrop -->
+  <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-out"
+       onclick="closeMobileSidebar()"
+       aria-hidden="true"></div>
+  <!-- Sheet Container -->
+  <div class="fixed inset-x-0 bottom-0 bg-white dark:bg-slate-800 rounded-t-xl shadow-xl transform transition-transform duration-300 ease-out translate-y-full max-h-[85vh] overflow-hidden"
+       id="sidebar-sheet-content">
+    <!-- Sheet Header -->
+    <div class="sticky top-0 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-4 py-3 z-10">
+      <!-- Drag Handle -->
+      <div class="absolute top-2 left-1/2 transform -translate-x-1/2">
+        <div class="w-8 h-1 bg-gray-300 dark:bg-slate-600 rounded-full"
+             role="presentation"></div>
+      </div>
+      <div class="flex items-center justify-between mt-2">
+        <h2 id="sidebar-sheet-title"
+            class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+          <span class="mr-2" role="img" aria-label="Mobile">📱</span>
+          {% trans "Quick Navigation" %}
+        </h2>
+        <button type="button"
+                onclick="closeMobileSidebar()"
+                class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-lg p-1"
+                aria-label="{% trans 'Close navigation menu' %}">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <!-- Sheet Content -->
+    <div class="overflow-y-auto px-4 pb-6"
+         style="max-height: calc(85vh - 60px)">
+      <!-- Conditional Content: Show filters for filter-enabled pages -->
+      {% if show_mobile_filters %}
+        <!-- Mobile Filter & Sort Section -->
+        <section class="mb-6 mt-4" aria-labelledby="filters-heading-mobile">
+          <h3 id="filters-heading-mobile"
+              class="text-base font-semibold text-gray-900 dark:text-white flex items-center mb-4">
+            <span class="mr-2" role="img" aria-label="Filter">🔧</span>
+            {% trans "Filter & Sort" %}
+          </h3>
+          <!-- Mobile-optimized filter form -->
+          <form method="get" class="space-y-4" onsubmit="closeMobileSidebar()">
+            <!-- Sort Options -->
+            {% if show_sort %}
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">{% trans "Sort by" %}</label>
+                <select name="sort"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        onchange="this.form.submit()">
+                  {% if page_type == "for-you" %}
+                    <option value="relevance"
+                            {% if request.GET.sort == 'relevance' %}selected{% endif %}>
+                      {% trans "Most Relevant" %}
+                    </option>
+                    <option value="latest"
+                            {% if request.GET.sort == 'latest' %}selected{% endif %}>{% trans "Latest" %}</option>
+                    <option value="popular"
+                            {% if request.GET.sort == 'popular' %}selected{% endif %}>
+                      {% trans "Most Popular" %}
+                    </option>
+                  {% else %}
+                    <option value="latest"
+                            {% if applied_filters.sort == 'latest' %}selected{% endif %}>
+                      {% trans "Latest first" %}
+                    </option>
+                    <option value="popular"
+                            {% if applied_filters.sort == 'popular' %}selected{% endif %}>
+                      {% trans "Most popular" %}
+                    </option>
+                    <option value="trending"
+                            {% if applied_filters.sort == 'trending' %}selected{% endif %}>
+                      {% trans "Trending today" %}
+                    </option>
+                  {% endif %}
+                </select>
+              </div>
+            {% endif %}
+            <!-- Category Filter -->
+            {% if show_category_filter and filter_categories %}
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                  {% if page_type == "for-you" %}
+                    {% trans "Your Topics" %}
+                  {% else %}
+                    {% trans "Category" %}
+                  {% endif %}
+                </label>
+                <select name="category"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        onchange="this.form.submit()">
+                  {% if page_type == "for-you" %}
+                    <option value="">{% trans "All Your Topics" %}</option>
+                    {% for category_code, category_name in filter_categories %}
+                      <option value="{{ category_code }}"
+                              {% if request.GET.category == category_code %}selected{% endif %}>
+                        {{ category_name }}
+                      </option>
+                    {% endfor %}
+                  {% else %}
+                    <option value="">{% trans "All categories" %}</option>
+                    {% for facet in filter_categories %}
+                      <option value="{{ facet.source__primary_category }}"
+                              {% if applied_filters.category == facet.source__primary_category %}selected{% endif %}>
+                        {{ facet.source__primary_category|capfirst }} ({{ facet.count }})
+                      </option>
+                    {% endfor %}
+                  {% endif %}
+                </select>
+              </div>
+            {% endif %}
+            <!-- Source Filter -->
+            {% if show_source_filter and filter_sources %}
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+                  {% if page_type == "for-you" %}
+                    {% trans "Your Sources" %}
+                  {% else %}
+                    {% trans "Source" %}
+                  {% endif %}
+                </label>
+                <select name="source"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        onchange="this.form.submit()">
+                  {% if page_type == "for-you" or page_type == "category" %}
+                    <option value="">
+                      {% if page_type == "for-you" %}
+                        {% trans "All Your Sources" %}
+                      {% else %}
+                        {% trans "All sources" %}
+                      {% endif %}
+                    </option>
+                    {% for source in filter_sources %}
+                      <option value="{{ source.id }}"
+                              {% if request.GET.source == source.id|stringformat:"s" %}selected{% endif %}>
+                        {{ source.name }}
+                      </option>
+                    {% endfor %}
+                  {% else %}
+                    <option value="">{% trans "All sources" %}</option>
+                    {% for facet in filter_sources %}
+                      <option value="{{ facet.source__id }}"
+                              {% if applied_filters.source == facet.source__id|stringformat:"s" %}selected{% endif %}>
+                        {{ facet.source__name }} ({{ facet.count }})
+                      </option>
+                    {% endfor %}
+                  {% endif %}
+                </select>
+              </div>
+            {% endif %}
+            <!-- Sentiment Filter -->
+            {% if show_sentiment %}
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">{% trans "Sentiment" %}</label>
+                <select name="sentiment"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                        onchange="this.form.submit()">
+                  <option value="">{% trans "All sentiments" %}</option>
+                  <option value="positive"
+                          {% if request.GET.sentiment == 'positive' or applied_filters.sentiment == 'positive' %}selected{% endif %}>
+                    😊 {% trans "Positive" %}
+                  </option>
+                  <option value="neutral"
+                          {% if request.GET.sentiment == 'neutral' or applied_filters.sentiment == 'neutral' %}selected{% endif %}>
+                    😐 {% trans "Neutral" %}
+                  </option>
+                  <option value="negative"
+                          {% if request.GET.sentiment == 'negative' or applied_filters.sentiment == 'negative' %}selected{% endif %}>
+                    😞 {% trans "Negative" %}
+                  </option>
+                </select>
+              </div>
+            {% endif %}
+            <!-- Clear Filters Button -->
+            <div class="pt-2">
+              {% if page_type == "for-you" %}
+                <a href="{% url 'news:for-you' %}"
+                   onclick="closeMobileSidebar()"
+                   class="block w-full text-center px-4 py-2 bg-gray-100 dark:bg-slate-600 text-gray-700 dark:text-slate-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-500 transition-colors">
+                  <svg class="w-4 h-4 mr-2 inline-block"
+                       fill="none"
+                       stroke="currentColor"
+                       viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                  {% trans "Clear Filters" %}
+                </a>
+              {% elif page_type == "category" %}
+                <a href="{% url 'news:category' current_category %}"
+                   onclick="closeMobileSidebar()"
+                   class="block w-full text-center px-4 py-2 bg-gray-100 dark:bg-slate-600 text-gray-700 dark:text-slate-300 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-500 transition-colors">
+                  <svg class="w-4 h-4 mr-2 inline-block"
+                       fill="none"
+                       stroke="currentColor"
+                       viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                  {% trans "Clear filters" %}
+                </a>
+              {% endif %}
+            </div>
+          </form>
+        </section>
+      {% else %}
+        <!-- Mobile-Optimized Trending Articles -->
+        {% if trending_articles %}
+          <section class="mb-6 mt-4" aria-labelledby="trending-heading-mobile">
+            <h3 id="trending-heading-mobile"
+                class="text-base font-semibold text-gray-900 dark:text-white flex items-center mb-3">
+              <span class="mr-2" role="img" aria-label="Fire">🔥</span>
+              {% trans "Trending Now" %}
+            </h3>
+            <div class="space-y-3">
+              {% for article in trending_articles|slice:":4" %}
+                <a href="{{ article.url }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   onclick="trackArticleClick({{ article.id }}); closeMobileSidebar();"
+                   class="mobile-nav-item focus-ring flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                  <!-- Thumbnail -->
+                  <div class="flex-shrink-0">
+                    {% if article.top_image %}
+                      <img src="{{ article.top_image }}"
+                           alt="{{ article.title }}"
+                           class="w-12 h-12 object-cover rounded"
+                           loading="lazy" />
+                    {% else %}
+                      <div class="w-12 h-12 bg-primary-100 dark:bg-slate-600 rounded flex items-center justify-center">
+                        <svg class="w-6 h-6 text-primary-400 dark:text-slate-400"
+                             fill="none"
+                             stroke="currentColor"
+                             viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z">
+                          </path>
+                        </svg>
+                      </div>
+                    {% endif %}
+                  </div>
+                  <!-- Content -->
+                  <div class="flex-1 min-w-0">
+                    <h4 class="text-sm font-medium text-gray-900 dark:text-white leading-tight mb-1 line-clamp-2">
+                      {{ article.title|truncatewords:10 }}
+                    </h4>
+                    <div class="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400">
+                      <span class="font-medium">{{ article.source.name|truncatewords:1 }}</span>
+                      <div class="flex items-center space-x-2">
+                        <span>👁 {{ article.view_count|intcomma }}</span>
+                        {% if article.sentiment_label %}
+                          <span>
+                            {% if article.sentiment_label == 'positive' %}
+                              😊
+                            {% elif article.sentiment_label == 'negative' %}
+                              😞
+                            {% else %}
+                              😐
+                            {% endif %}
+                          </span>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </a>
+              {% endfor %}
+            </div>
+            <div class="mt-3 text-center">
+              <a href="{% url 'news:trending' %}"
+                 onclick="closeMobileSidebar()"
+                 class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">
+                {% trans "View all trending" %} →
+              </a>
+            </div>
+          </section>
+        {% endif %}
+        <!-- Mobile-Optimized Top Sources -->
+        {% if top_sources %}
+          <section class="mb-6" aria-labelledby="sources-heading-mobile">
+            <h3 id="sources-heading-mobile"
+                class="text-base font-semibold text-gray-900 dark:text-white flex items-center mb-3">
+              <span class="mr-2" role="img" aria-label="Chart">📊</span>
+              {% trans "Top Sources" %}
+            </h3>
+            <div class="grid grid-cols-1 gap-3">
+              {% for source in top_sources|slice:":6" %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
+                  <div class="flex items-center space-x-2 min-w-0 flex-1">
+                    <span class="text-sm font-medium text-gray-700 dark:text-slate-300 truncate">{{ source.name|truncatewords:2 }}</span>
+                    <!-- Credibility Score Stars -->
+                    <div class="flex items-center flex-shrink-0">
+                      {% for i in "12345"|make_list %}
+                        <svg class="w-2 h-2 {% if source.credibility_score >= i|add:0 %}text-yellow-400{% else %}text-gray-300 dark:text-slate-600{% endif %}"
+                             fill="currentColor"
+                             viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-1 flex-shrink-0">
+                    <span class="text-xs badge badge-primary px-1.5 py-0.5">{{ source.credibility_score }}/10</span>
+                    <span class="text-xs badge px-1.5 py-0.5 {% if source.bias_rating == 'center' %}bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300{% elif source.bias_rating == 'left' %}bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300{% else %}bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300{% endif %}">
+                      {{ source.get_bias_rating_display|slice:":1"|upper }}
+                    </span>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </section>
+        {% endif %}
+        <!-- Mobile-Optimized Trending Searches -->
+        {% if trending_searches %}
+          <section class="mb-6" aria-labelledby="searches-heading-mobile">
+            <h3 id="searches-heading-mobile"
+                class="text-base font-semibold text-gray-900 dark:text-white flex items-center mb-3">
+              <span class="mr-2" role="img" aria-label="Search">🔍</span>
+              {% trans "Trending Searches" %}
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              {% for search in trending_searches|slice:":8" %}
+                <a href="{% url 'news:search' %}?q={{ search.normalized_query|urlencode }}"
+                   onclick="closeMobileSidebar()"
+                   class="focus-ring text-sm bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-700 dark:hover:text-primary-300 px-3 py-1.5 rounded-full transition-colors">
+                  {{ search.normalized_query }}
+                  <span class="text-gray-500 dark:text-slate-400 ml-1">({{ search.search_count }})</span>
+                </a>
+              {% endfor %}
+            </div>
+          </section>
+        {% endif %}
+        <!-- Mobile Quick Actions -->
+        {% if request.user.is_authenticated %}
+          <section class="mb-6" aria-labelledby="actions-heading-mobile">
+            <h3 id="actions-heading-mobile"
+                class="text-base font-semibold text-gray-900 dark:text-white flex items-center mb-3">
+              <span class="mr-2" role="img" aria-label="Lightning">⚡</span>
+              {% trans "Quick Actions" %}
+            </h3>
+            <div class="grid grid-cols-1 gap-2">
+              <a href="{% url 'news:bookmarks' %}"
+                 onclick="closeMobileSidebar()"
+                 class="mobile-nav-item focus-ring flex items-center space-x-3 p-3 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <svg class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z">
+                  </path>
+                </svg>
+                <span class="font-medium">{% trans "My Bookmarks" %}</span>
+              </a>
+              <a href="{% url 'news:search' %}"
+                 onclick="closeMobileSidebar()"
+                 class="mobile-nav-item focus-ring flex items-center space-x-3 p-3 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <svg class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+                  </path>
+                </svg>
+                <span class="font-medium">{% trans "Advanced Search" %}</span>
+              </a>
+              <a href="{% url 'users:update' %}"
+                 onclick="closeMobileSidebar()"
+                 class="mobile-nav-item focus-ring flex items-center space-x-3 p-3 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <svg class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                  </path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span class="font-medium">{% trans "Preferences" %}</span>
+              </a>
+            </div>
+          </section>
+        {% else %}
+          <!-- Quick Actions for Anonymous Users -->
+          <section class="mb-6" aria-labelledby="anon-actions-heading-mobile">
+            <h3 id="anon-actions-heading-mobile"
+                class="text-base font-semibold text-gray-900 dark:text-white flex items-center mb-3">
+              <span class="mr-2" role="img" aria-label="User">👤</span>
+              {% trans "Get Started" %}
+            </h3>
+            <div class="grid grid-cols-1 gap-2">
+              <a href="{% url 'account_login' %}"
+                 onclick="closeMobileSidebar()"
+                 class="mobile-nav-item focus-ring flex items-center space-x-3 p-3 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <svg class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                  </path>
+                </svg>
+                <span class="font-medium">{% trans "Sign In" %}</span>
+              </a>
+              {% if ACCOUNT_ALLOW_REGISTRATION %}
+                <a href="{% url 'account_signup' %}"
+                   onclick="closeMobileSidebar()"
+                   class="mobile-nav-item focus-ring flex items-center space-x-3 p-3 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                  <svg class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                       fill="none"
+                       stroke="currentColor"
+                       viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
+                    </path>
+                  </svg>
+                  <span class="font-medium">{% trans "Sign Up Free" %}</span>
+                </a>
+              {% endif %}
+              <a href="{% url 'news:search' %}"
+                 onclick="closeMobileSidebar()"
+                 class="mobile-nav-item focus-ring flex items-center space-x-3 p-3 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <svg class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+                  </path>
+                </svg>
+                <span class="font-medium">{% trans "Search News" %}</span>
+              </a>
+              <a href="{% url 'news:trending' %}"
+                 onclick="closeMobileSidebar()"
+                 class="mobile-nav-item focus-ring flex items-center space-x-3 p-3 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <svg class="w-5 h-5 text-primary-600 dark:text-primary-400"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                </svg>
+                <span class="font-medium">{% trans "Trending News" %}</span>
+              </a>
+            </div>
+          </section>
+        {% endif %}
+        <!-- Mobile Sentiment Overview -->
+        {% if sentiment_stats %}
+          <section class="mb-4" aria-labelledby="sentiment-heading-mobile">
+            <h3 id="sentiment-heading-mobile"
+                class="text-base font-semibold text-gray-900 dark:text-white flex items-center mb-3">
+              <span class="mr-2" role="img" aria-label="Chart trending up">📈</span>
+              {% trans "News Sentiment" %}
+            </h3>
+            <div class="grid grid-cols-3 gap-3">
+              {% for stat in sentiment_stats %}
+                <div class="text-center p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
+                  <div class="text-xl mb-1">
+                    {% if stat.sentiment_label == 'positive' %}
+                      😊
+                    {% elif stat.sentiment_label == 'negative' %}
+                      😞
+                    {% else %}
+                      😐
+                    {% endif %}
+                  </div>
+                  <div class="text-xs font-medium text-gray-700 dark:text-slate-300 capitalize mb-1">{{ stat.sentiment_label }}</div>
+                  <div class="text-xs text-gray-500 dark:text-slate-400">{{ stat.count|intcomma }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          </section>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Enhanced sheet animations */
+  #mobile-sidebar-sheet {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  #mobile-sidebar-sheet.show #sidebar-sheet-content {
+    transform: translateY(0);
+  }
+
+  #mobile-sidebar-sheet.show {
+    display: block !important;
+  }
+
+  #mobile-sidebar-sheet.show .fixed.inset-0.bg-black {
+    opacity: 0.5;
+  }
+
+  /* Smooth hover animations for mobile items */
+  .mobile-nav-item {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .mobile-nav-item:hover {
+    transform: translateY(-1px);
+  }
+
+  /* Loading pulse animation */
+  @keyframes pulse-subtle {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  .pulse-subtle {
+    animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Enhanced focus styles for accessibility */
+  .focus-ring {
+    transition: box-shadow 0.15s ease-in-out;
+  }
+
+  .focus-ring:focus-visible {
+    outline: 2px solid transparent;
+    box-shadow: 0 0 0 2px #4994e8, 0 0 0 4px rgba(73, 148, 232, 0.1);
+  }
+</style>
+<script>
+  // Mobile Sidebar Functions with enhanced UX
+  let isAnimating = false;
+
+  function openMobileSidebar() {
+    if (isAnimating) return;
+
+    isAnimating = true;
+    const sheet = document.getElementById('mobile-sidebar-sheet');
+    const body = document.body;
+
+    // Prevent background scrolling
+    const scrollY = body.style.top;
+    body.style.position = 'fixed';
+    body.style.top = `-${window.scrollY}px`;
+    body.style.width = '100%';
+
+    sheet.classList.remove('hidden');
+    sheet.setAttribute('aria-hidden', 'false');
+
+    // Trigger animation with requestAnimationFrame for better performance
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        sheet.classList.add('show');
+        isAnimating = false;
+      });
+    });
+
+    // Focus management for accessibility
+    setTimeout(() => {
+      const firstFocusable = sheet.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (firstFocusable) {
+        firstFocusable.focus();
+      }
+    }, 350);
+  }
+
+  function closeMobileSidebar() {
+    if (isAnimating) return;
+
+    isAnimating = true;
+    const sheet = document.getElementById('mobile-sidebar-sheet');
+    const body = document.body;
+
+    sheet.classList.remove('show');
+    sheet.setAttribute('aria-hidden', 'true');
+
+    // Restore background scrolling
+    const scrollY = body.style.top;
+    body.style.position = '';
+    body.style.top = '';
+    body.style.width = '';
+    window.scrollTo(0, parseInt(scrollY || '0') * -1);
+
+    // Hide after animation completes
+    setTimeout(() => {
+      sheet.classList.add('hidden');
+      isAnimating = false;
+    }, 300);
+  }
+
+  // Enhanced touch gesture handling
+  let touchStartY = 0;
+  let currentTranslateY = 0;
+  let isDragging = false;
+  let sheetContent = null;
+
+  // Initialize touch handlers when DOM is ready
+  document.addEventListener('DOMContentLoaded', function() {
+    sheetContent = document.getElementById('sidebar-sheet-content');
+    if (!sheetContent) return;
+
+    let threshold = 100; // Pixels to swipe before closing
+    let velocityThreshold = 0.5; // Velocity threshold for quick swipes
+
+    sheetContent.addEventListener('touchstart', function(e) {
+      touchStartY = e.touches[0].clientY;
+      currentTranslateY = 0;
+      isDragging = true;
+      sheetContent.style.transition = 'none';
+    }, {
+      passive: true
+    });
+
+    sheetContent.addEventListener('touchmove', function(e) {
+      if (!isDragging) return;
+
+      const currentY = e.touches[0].clientY;
+      const deltaY = currentY - touchStartY;
+
+      // Only allow swiping down
+      if (deltaY > 0) {
+        currentTranslateY = Math.min(deltaY, 200); // Cap at 200px
+        sheetContent.style.transform = `translateY(${currentTranslateY}px)`;
+
+        // Add opacity fade effect
+        const opacity = Math.max(0.3, 1 - (currentTranslateY / 300));
+        document.querySelector('#mobile-sidebar-sheet .fixed.inset-0.bg-black').style.opacity = opacity * 0.5;
+      }
+    }, {
+      passive: true
+    });
+
+    sheetContent.addEventListener('touchend', function(e) {
+      if (!isDragging) return;
+
+      isDragging = false;
+      sheetContent.style.transition = '';
+
+      // Calculate velocity
+      const velocity = currentTranslateY / 100; // Rough velocity calculation
+
+      // Close if dragged far enough or fast enough
+      if (currentTranslateY > threshold || velocity > velocityThreshold) {
+        closeMobileSidebar();
+      } else {
+        // Snap back to original position
+        sheetContent.style.transform = 'translateY(0)';
+        document.querySelector('#mobile-sidebar-sheet .fixed.inset-0.bg-black').style.opacity = 0.5;
+      }
+
+      currentTranslateY = 0;
+    }, {
+      passive: true
+    });
+  });
+
+  // Enhanced keyboard navigation
+  document.addEventListener('keydown', function(e) {
+    const sheet = document.getElementById('mobile-sidebar-sheet');
+    if (!sheet || sheet.classList.contains('hidden')) return;
+
+    switch (e.key) {
+      case 'Escape':
+        e.preventDefault();
+        closeMobileSidebar();
+        break;
+      case 'Tab':
+        // Trap focus within the sheet
+        const focusableElements = sheet.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstFocusable = focusableElements[0];
+        const lastFocusable = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey && document.activeElement === firstFocusable) {
+          e.preventDefault();
+          lastFocusable.focus();
+        } else if (!e.shiftKey && document.activeElement === lastFocusable) {
+          e.preventDefault();
+          firstFocusable.focus();
+        }
+        break;
+    }
+  });
+
+  // Performance optimization: Debounce resize events
+  let resizeTimeout;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function() {
+      // Close sidebar if screen becomes large
+      if (window.innerWidth >= 1024) { // lg breakpoint
+        const sheet = document.getElementById('mobile-sidebar-sheet');
+        if (sheet && !sheet.classList.contains('hidden')) {
+          closeMobileSidebar();
+        }
+      }
+    }, 250);
+  });
+</script>

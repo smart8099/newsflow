@@ -1,0 +1,71 @@
+{% load i18n %}
+
+<!-- Infinite Scroll Articles -->
+{% if page_type == "search" %}
+  <!-- Search Results - Compact Layout -->
+  {% for article in articles %}
+    {% include 'news/partials/news_card_compact.html' %}
+  {% endfor %}
+{% elif page_type == "trending" or page_type == "category" or page_type == "for-you" or page_type == "home" %}
+  <!-- Standard Grid Layout -->
+  {% for article in articles %}
+    {% include 'news/partials/news_card_secondary.html' %}
+  {% endfor %}
+{% else %}
+  <!-- Default Layout -->
+  {% for article in articles %}
+    {% include 'news/partials/news_card_secondary.html' %}
+  {% endfor %}
+{% endif %}
+<!-- Next Page Trigger for HTMX or End Message -->
+{% if has_more and next_page %}
+  <div class="w-full text-center pt-8"
+       id="load-more-trigger-{{ next_page }}"
+       style="grid-column: 1 / -1">
+    <div hx-get="{% url 'news:load-more' %}?page={{ next_page }}&type={{ page_type }}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% if request.GET.sentiment %}&sentiment={{ request.GET.sentiment }}{% endif %}{% if request.GET.source %}&source={{ request.GET.source }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}"
+         hx-target="#articles-container"
+         hx-swap="beforeend"
+         hx-trigger="revealed"
+         class="flex items-center justify-center">
+      <div class="spinner w-6 h-6 mr-3"></div>
+      <span class="text-gray-600 dark:text-slate-400">
+        {% if page_type == "search" %}
+          {% trans "Loading more results..." %}
+        {% elif page_type == "trending" %}
+          {% trans "Loading more trending..." %}
+        {% elif page_type == "for-you" %}
+          {% trans "Loading more recommendations..." %}
+        {% else %}
+          {% trans "Loading more articles..." %}
+        {% endif %}
+      </span>
+    </div>
+  </div>
+{% else %}
+  <!-- End of content - Scroll to top button -->
+  <div class="w-full text-center pt-8 pb-4"
+       id="scroll-to-top-section"
+       style="grid-column: 1 / -1">
+    <div class="flex flex-col items-center space-y-4">
+      <p class="text-gray-500 dark:text-slate-400 text-sm">
+        {% if page_type == "search" %}
+          {% trans "You've reached the end of search results" %}
+        {% elif page_type == "trending" %}
+          {% trans "You've seen all trending articles" %}
+        {% elif page_type == "for-you" %}
+          {% trans "You've seen all recommendations" %}
+        {% else %}
+          {% trans "You've reached the end of articles" %}
+        {% endif %}
+      </p>
+      <button onclick="scrollToTop()"
+              class="flex items-center justify-center w-12 h-12 bg-primary-600 hover:bg-primary-700 text-white rounded-full shadow-lg transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+{% endif %}
+<!-- Remove previous trigger -->
+{% if has_more and next_page %}<div hx-swap-oob="delete:#load-more-trigger-{{ next_page|add:'-1' }}"></div>{% endif %}

@@ -1,0 +1,214 @@
+[
+  {
+    "model": "news.userinteraction",
+    "pk": 1,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440301",
+      "user": 1,
+      "article": 1,
+      "action": "view",
+      "metadata": {},
+      "ip_address": "192.168.1.100",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      "reading_time": 180
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 2,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440302",
+      "user": 1,
+      "article": 1,
+      "action": "like",
+      "metadata": {},
+      "ip_address": "192.168.1.100",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      "reading_time": null
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 3,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440303",
+      "user": 2,
+      "article": 2,
+      "action": "view",
+      "metadata": {},
+      "ip_address": "192.168.1.101",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "reading_time": 120
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 4,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440304",
+      "user": 2,
+      "article": 2,
+      "action": "bookmark",
+      "metadata": {},
+      "ip_address": "192.168.1.101",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "reading_time": null
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 5,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440305",
+      "user": 3,
+      "article": 3,
+      "action": "view",
+      "metadata": {},
+      "ip_address": "10.0.1.50",
+      "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+      "reading_time": 240
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 6,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440306",
+      "user": 3,
+      "article": 3,
+      "action": "share",
+      "metadata": {
+        "platform": "twitter"
+      },
+      "ip_address": "10.0.1.50",
+      "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+      "reading_time": null
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 7,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440307",
+      "user": 4,
+      "article": 4,
+      "action": "view",
+      "metadata": {},
+      "ip_address": "172.16.0.25",
+      "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+      "reading_time": 160
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 8,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440308",
+      "user": 4,
+      "article": 6,
+      "action": "view",
+      "metadata": {},
+      "ip_address": "172.16.0.25",
+      "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+      "reading_time": 190
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 9,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440309",
+      "user": 4,
+      "article": 6,
+      "action": "like",
+      "metadata": {},
+      "ip_address": "172.16.0.25",
+      "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+      "reading_time": null
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 10,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440310",
+      "user": 5,
+      "article": 7,
+      "action": "view",
+      "metadata": {},
+      "ip_address": "192.168.0.75",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      "reading_time": 220
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 11,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440311",
+      "user": 1,
+      "article": 9,
+      "action": "view",
+      "metadata": {},
+      "ip_address": "192.168.1.100",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      "reading_time": 170
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 12,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440312",
+      "user": 1,
+      "article": 9,
+      "action": "bookmark",
+      "metadata": {},
+      "ip_address": "192.168.1.100",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      "reading_time": null
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 13,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440313",
+      "user": 2,
+      "article": 8,
+      "action": "view",
+      "metadata": {},
+      "ip_address": "192.168.1.101",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "reading_time": 140
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 14,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440314",
+      "user": 3,
+      "article": 10,
+      "action": "view",
+      "metadata": {},
+      "ip_address": "10.0.1.50",
+      "user_agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+      "reading_time": 200
+    }
+  },
+  {
+    "model": "news.userinteraction",
+    "pk": 15,
+    "fields": {
+      "uuid": "550e8400-e29b-41d4-a716-446655440315",
+      "user": 5,
+      "article": 5,
+      "action": "view",
+      "metadata": {},
+      "ip_address": "192.168.0.75",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      "reading_time": 210
+    }
+  }
+]

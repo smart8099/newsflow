@@ -1,0 +1,176 @@
+{% load i18n humanize news_tags %}
+
+{% for article in articles %}
+  <article class="news-card group relative overflow-hidden bg-white dark:bg-slate-800 rounded-lg shadow-soft hover:shadow-lg transition-all duration-300 border border-gray-200 dark:border-slate-700 hover:border-primary-200 dark:hover:border-primary-700">
+    <!-- Featured Badge -->
+    {% if article.is_featured %}
+      <div class="absolute top-3 left-3 z-10">
+        <span class="badge bg-yellow-500 text-white text-xs font-medium">⭐ {% trans "Featured" %}</span>
+      </div>
+    {% endif %}
+    <!-- Article Link -->
+    <a href="{{ article.url }}"
+       target="_blank"
+       rel="noopener noreferrer"
+       class="block"
+       onclick="trackArticleClick('{{ article.id }}')">
+      <!-- Image Container -->
+      {% if article.top_image and not show_compact %}
+        <div class="relative aspect-video overflow-hidden">
+          <img src="{{ article.top_image }}"
+               alt="{{ article.title }}"
+               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+               loading="lazy" />
+          <!-- Sentiment Badge -->
+          {% if article.sentiment_label %}
+            <div class="absolute top-3 right-3">
+              <span class="badge text-xs {% if article.sentiment_label == 'positive' %}bg-green-500 text-white{% elif article.sentiment_label == 'negative' %}bg-red-500 text-white{% else %}bg-gray-500 text-white{% endif %}">
+                {% if article.sentiment_label == 'positive' %}
+                  😊
+                {% elif article.sentiment_label == 'negative' %}
+                  😞
+                {% else %}
+                  😐
+                {% endif %}
+              </span>
+            </div>
+          {% endif %}
+          <!-- Reading Time -->
+          <div class="absolute bottom-3 left-3">
+            <span class="bg-black/70 text-white px-2 py-1 rounded text-xs">📖 {{ article.read_time }}min</span>
+          </div>
+          <!-- View Count -->
+          <div class="absolute bottom-3 right-3">
+            <span class="bg-black/70 text-white px-2 py-1 rounded text-xs">👁 {{ article.view_count|intcomma }}</span>
+          </div>
+        </div>
+      {% endif %}
+    </a>
+    <!-- Content -->
+    <div class="p-4">
+      <!-- Categories -->
+      {% if article.categories.all %}
+        <div class="flex flex-wrap gap-1 mb-2">
+          {% for category in article.categories.all|slice:":2" %}
+            <span class="badge badge-primary text-xs">{{ category.name }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <!-- Title -->
+      <a href="{{ article.url }}"
+         target="_blank"
+         rel="noopener noreferrer"
+         onclick="trackArticleClick('{{ article.id }}')">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors duration-200 leading-tight mb-2">
+          {% if show_compact %}
+            {{ article.title|truncatewords:12 }}
+          {% else %}
+            {{ article.title }}
+          {% endif %}
+        </h3>
+      </a>
+      <!-- Summary -->
+      {% if article.summary and not show_compact %}
+        <div class="mb-3">
+          <div class="summary-content">
+            <p class="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
+              <!-- Desktop: Show full summary -->
+              <span class="hidden md:block">{{ article.summary }}</span>
+              <!-- Mobile: Show truncated with toggle -->
+              <span class="md:hidden">
+                <span class="summary-short">{{ article.summary|truncatewords:20 }}</span>
+                <span class="summary-full hidden">{{ article.summary }}</span>
+                {% if article.summary|wordcount > 20 %}
+                  <button class="summary-toggle text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 text-xs font-medium ml-1 focus:outline-none">
+                    Read more
+                  </button>
+                {% endif %}
+              </span>
+            </p>
+          </div>
+        </div>
+      {% elif article.content and not show_compact %}
+        <div class="mb-3">
+          <div class="summary-content">
+            <p class="text-gray-600 dark:text-slate-400 text-sm leading-relaxed">
+              <!-- Desktop: Show full content -->
+              <span class="hidden md:block">{{ article.content }}</span>
+              <!-- Mobile: Show truncated with toggle -->
+              <span class="md:hidden">
+                <span class="summary-short">{{ article.content|truncatewords:20 }}</span>
+                <span class="summary-full hidden">{{ article.content }}</span>
+                {% if article.content|wordcount > 20 %}
+                  <button class="summary-toggle text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 text-xs font-medium ml-1 focus:outline-none">
+                    Read more
+                  </button>
+                {% endif %}
+              </span>
+            </p>
+          </div>
+        </div>
+      {% endif %}
+      <!-- Keywords -->
+      {% if article.keywords and not show_compact %}
+        <div class="flex flex-wrap gap-1 mb-3">
+          {% for keyword in article.keywords|slice:":3" %}
+            <span class="text-xs bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 px-2 py-1 rounded">
+              #{{ keyword }}
+            </span>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <!-- Meta Information -->
+      <div class="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400">
+        <div class="flex items-center space-x-2">
+          <!-- Source -->
+          <span class="font-medium text-primary-600 dark:text-primary-400">{{ article.source.name|truncatewords:2 }}</span>
+          <!-- Credibility Score -->
+          <div class="flex items-center">
+            {% for i in "12345"|make_list %}
+              <svg class="w-2.5 h-2.5 {% if article.source.credibility_score >= i|add:0 %}text-yellow-400{% else %}text-gray-300 dark:text-slate-600{% endif %}"
+                   fill="currentColor"
+                   viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            {% endfor %}
+          </div>
+          <!-- Time -->
+          <span title="{{ article.published_at }}">{{ article.published_at|timesince }} ago</span>
+          {% if article.recommendation_reason %}
+            <span class="mx-1">•</span>
+            <span class="text-primary-500">{{ article.recommendation_reason }}</span>
+          {% endif %}
+        </div>
+        <!-- Action Buttons -->
+        <div class="flex items-center space-x-2">
+          <!-- Bookmark Button -->
+          {% is_bookmarked article user as is_bookmarked %}
+          <button class="bookmark-btn {% if is_bookmarked %}text-yellow-500{% else %}text-gray-400 hover:text-yellow-500{% endif %} transition-colors"
+                  data-article-id="{{ article.id }}"
+                  data-article-title="{{ article.title|escapejs }}"
+                  data-article-url="{{ article.url }}"
+                  data-bookmarked="{% if is_bookmarked %}true{% else %}false{% endif %}"
+                  title="{% if is_bookmarked %}{% trans 'Remove bookmark' %}{% else %}{% trans 'Bookmark' %}{% endif %}">
+            <svg class="w-4 h-4"
+                 {% if is_bookmarked %}fill="currentColor"{% else %}fill="none"{% endif %}
+                 stroke="currentColor"
+                 viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z">
+              </path>
+            </svg>
+          </button>
+          <!-- Share Button -->
+          <button class="share-btn text-gray-400 hover:text-blue-500 transition-colors"
+                  data-url="{{ article.url }}"
+                  data-title="{{ article.title|escapejs }}"
+                  title="{% trans 'Share' %}">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z">
+              </path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </article>
+{% endfor %}

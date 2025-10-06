@@ -1,0 +1,143 @@
+{% load i18n %}
+
+<!-- Category Navigation -->
+<div class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between py-2">
+      <!-- Categories Scroll -->
+      <div class="flex-1 overflow-x-auto scrollbar-hide">
+        <div class="flex space-x-1 min-w-max">
+          <!-- All Categories -->
+          <a href="{% url 'news:home' %}"
+             class="nav-link whitespace-nowrap {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+            <svg class="w-4 h-4 mr-1"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z">
+              </path>
+            </svg>
+            🏠 {% trans "All" %}
+          </a>
+          <!-- For You -->
+          <a href="{% url 'news:for-you' %}"
+             class="nav-link whitespace-nowrap {% if request.resolver_match.url_name == 'for-you' %}active{% endif %}">
+            <svg class="w-4 h-4 mr-1"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24">
+              {#              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>#}
+            </svg>
+            👤 {% trans "For You" %}
+          </a>
+          <!-- Individual Categories -->
+          {% for category_code, category_name in category_choices %}
+            <a href="{% url 'news:category' category_code %}"
+               class="nav-link whitespace-nowrap {% if current_category == category_code %}active{% endif %}">
+              {% if category_code == 'general' %}
+                📰
+              {% elif category_code == 'technology' %}
+                💻
+              {% elif category_code == 'business' %}
+                💼
+              {% elif category_code == 'politics' %}
+                🏛️
+              {% elif category_code == 'sports' %}
+                ⚽
+              {% elif category_code == 'entertainment' %}
+                🎬
+              {% elif category_code == 'health' %}
+                🏥
+              {% elif category_code == 'science' %}
+                🔬
+              {% elif category_code == 'world' %}
+                🌍
+              {% else %}
+                📄
+              {% endif %}
+              {{ category_name }}
+            </a>
+          {% endfor %}
+          <!-- Trending -->
+          <a href="{% url 'news:trending' %}"
+             class="nav-link whitespace-nowrap {% if request.resolver_match.url_name == 'trending' %}active{% endif %}">
+            <svg class="w-4 h-4 mr-1"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+            </svg>
+            🔥 {% trans "Trending" %}
+          </a>
+        </div>
+      </div>
+      <!-- Filter Toggle (Mobile) -->
+      <div class="ml-4 flex-shrink-0">
+        <button type="button"
+                class="btn btn-secondary btn-sm lg:hidden"
+                data-collapse-toggle="mobile-filters"
+                aria-controls="mobile-filters"
+                aria-expanded="false">
+          <svg class="w-4 h-4 mr-1"
+               fill="none"
+               stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z">
+            </path>
+          </svg>
+          {% trans "Filters" %}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Mobile Filters Panel -->
+<div id="mobile-filters"
+     class="hidden lg:hidden bg-gray-50 dark:bg-slate-700 border-b border-gray-200 dark:border-slate-600">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Sort Options -->
+      <div>
+        <label class="form-label text-sm">{% trans "Sort by" %}</label>
+        <select class="form-input text-sm"
+                onchange="updateURLParam('sort', this.value)">
+          <option value="latest"
+                  {% if applied_filters.sort == 'latest' %}selected{% endif %}>{% trans "Latest" %}</option>
+          <option value="popular"
+                  {% if applied_filters.sort == 'popular' %}selected{% endif %}>{% trans "Most Popular" %}</option>
+          <option value="trending"
+                  {% if applied_filters.sort == 'trending' %}selected{% endif %}>{% trans "Trending Today" %}</option>
+        </select>
+      </div>
+      <!-- Sentiment Filter -->
+      <div>
+        <label class="form-label text-sm">{% trans "Sentiment" %}</label>
+        <select class="form-input text-sm"
+                onchange="updateURLParam('sentiment', this.value)">
+          <option value="">{% trans "All Sentiments" %}</option>
+          <option value="positive"
+                  {% if applied_filters.sentiment == 'positive' %}selected{% endif %}>
+            😊 {% trans "Positive" %}
+          </option>
+          <option value="neutral"
+                  {% if applied_filters.sentiment == 'neutral' %}selected{% endif %}>😐 {% trans "Neutral" %}</option>
+          <option value="negative"
+                  {% if applied_filters.sentiment == 'negative' %}selected{% endif %}>
+            😞 {% trans "Negative" %}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function updateURLParam(param, value) {
+    const url = new URL(window.location);
+    if (value) {
+      url.searchParams.set(param, value);
+    } else {
+      url.searchParams.delete(param);
+    }
+    window.location.href = url.toString();
+  }
+</script>

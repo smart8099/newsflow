@@ -1,0 +1,54 @@
+{% extends "emails/base_email.html" %}
+
+{% load i18n %}
+
+{% block email_title %}
+  {% trans "Welcome to" %} {{ site_name }} - {% trans "Your news journey begins now" %}
+{% endblock %}
+{% block email_content %}
+  <h2 class="email-title">🎉 {% trans "Welcome to Newsflow" %}, {{ user.name|default:user.email }}!</h2>
+  <p class="email-text">
+    {% blocktrans %}
+        Your email has been verified and your account is now active! You're now part of a community
+        that stays informed with AI-powered news curation from 100+ global sources.
+        {% endblocktrans %}
+  </p>
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="{{ login_url }}" class="email-button">{% trans "Start Reading News" %}</a>
+  </div>
+  <div class="feature-box">
+    <h3>{% trans "What you can do now:" %}</h3>
+    <ul class="feature-list">
+      <li>{% trans "Get personalized news recommendations" %}</li>
+      <li>{% trans "Browse news from 100+ trusted sources" %}</li>
+      <li>{% trans "Save articles for later reading" %}</li>
+      <li>{% trans "Customize your news preferences" %}</li>
+      <li>{% trans "Enjoy ad-free, distraction-free reading" %}</li>
+    </ul>
+  </div>
+  <div class="feature-box"
+       style="background: linear-gradient(135deg, #f0f7fe 0%, #e0f2fe 100%);
+              border-left-color: #0ea5e9">
+    <h3 style="color: #0c4a6e;">💡 {% trans "Quick Start Tips:" %}</h3>
+    <ul class="feature-list">
+      <li>{% trans "Visit your dashboard to set up news preferences" %}</li>
+      <li>{% trans "Follow topics and sources you're interested in" %}</li>
+      <li>{% trans "Check out the trending news section" %}</li>
+      <li>{% trans "Try our AI-powered news summaries" %}</li>
+    </ul>
+  </div>
+  <p class="email-text">
+    {% blocktrans %}
+        We're excited to help you stay informed with the latest news from around the world.
+        If you have any questions or need assistance, our support team is here to help.
+        {% endblocktrans %}
+  </p>
+  <p class="email-text"
+     style="margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0">
+    <strong>{% trans "Happy reading!" %}</strong>
+    <br />
+    {% trans "The Newsflow Team" %}
+  </p>
+{% endblock %}

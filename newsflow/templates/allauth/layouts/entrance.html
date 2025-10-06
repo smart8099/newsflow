@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% load i18n %}
+
+{% block css %}
+  {{ block.super }}
+{% endblock css %}
+{% block title %}
+  {% block head_title %}
+    {% trans "Sign In" %}
+  {% endblock head_title %}
+{% endblock title %}
+{% block body %}
+  <!-- Full height centered container -->
+  <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+      <!-- Logo and header -->
+      <div class="text-center">
+        <a href="{% url 'news:home' %}" class="inline-block">
+          <h2 class="text-3xl font-bold">
+            <span class="text-primary-600 dark:text-primary-400">News</span><span class="text-primary-800 dark:text-primary-300">flow</span>
+          </h2>
+        </a>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+          {% block entrance_subtitle %}
+            {% trans "Welcome back! Please sign in to your account." %}
+          {% endblock entrance_subtitle %}
+        </p>
+      </div>
+      <!-- Card container -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-black/40 border dark:border-gray-700 p-8">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} mb-4"
+                 x-data="{ show: true }"
+                 x-show="show">
+              <div class="flex justify-between items-center">
+                <span>{{ message }}</span>
+                <button @click="show = false" class="ml-4">
+                  <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          {% endfor %}
+        {% endif %}
+        {% block content %}
+        {% endblock content %}
+        {% block extra_body %}
+        {% endblock extra_body %}
+      </div>
+    </div>
+  </div>
+{% endblock body %}

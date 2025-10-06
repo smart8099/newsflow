@@ -1,0 +1,301 @@
+{% extends "news/base_news.html" %}
+
+{% load i18n humanize news_tags %}
+
+{% block title %}
+  {{ page_title }} - {% trans "My Dashboard" %}
+{% endblock %}
+{% block extra_head %}
+  <style>
+    .tab-button.active {
+      @apply border-primary-500 text-primary-600 dark:text-primary-400;
+    }
+
+    .tab-button {
+      @apply border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-slate-400 dark:hover:text-slate-300;
+    }
+  </style>
+{% endblock %}
+{% block content %}
+  <div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">{% trans "My Dashboard" %}</h1>
+      <p class="text-gray-600 dark:text-slate-400">{% trans "Manage your liked, bookmarked, and shared articles" %}</p>
+    </div>
+    <!-- Tabs -->
+    <div class="border-b border-gray-200 dark:border-slate-700 mb-6">
+      <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+        <!-- Bookmarks Tab -->
+        <a href="?tab=bookmarks"
+           class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center {% if active_tab == 'bookmarks' %}active{% endif %}">
+          <svg class="w-5 h-5 mr-2"
+               fill="none"
+               stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z">
+            </path>
+          </svg>
+          {% trans "Bookmarked" %}
+          <span class="ml-2 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 py-0.5 px-2 rounded-full text-xs">
+            {{ bookmark_count }}
+          </span>
+        </a>
+        <!-- Likes Tab -->
+        <a href="?tab=likes"
+           class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center {% if active_tab == 'likes' %}active{% endif %}">
+          <svg class="w-5 h-5 mr-2"
+               fill="none"
+               stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+            </path>
+          </svg>
+          {% trans "Liked" %}
+          <span class="ml-2 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 py-0.5 px-2 rounded-full text-xs">
+            {{ like_count }}
+          </span>
+        </a>
+        <!-- Shared Tab -->
+        <a href="?tab=shared"
+           class="tab-button whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 flex items-center {% if active_tab == 'shared' %}active{% endif %}">
+          <svg class="w-5 h-5 mr-2"
+               fill="none"
+               stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z">
+            </path>
+          </svg>
+          {% trans "Shared" %}
+          <span class="ml-2 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 py-0.5 px-2 rounded-full text-xs">
+            {{ share_count }}
+          </span>
+        </a>
+      </nav>
+    </div>
+    <!-- Content -->
+    <div class="min-h-screen">
+      {% if articles %}
+        <!-- Articles Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {% for article in articles %}
+            <div class="dashboard-article-card bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-shadow duration-200">
+              <!-- Article Image -->
+              <div class="relative aspect-video">
+                {% if article.top_image %}
+                  <img src="{{ article.top_image }}"
+                       alt="{{ article.title }}"
+                       class="w-full h-full object-cover" />
+                {% else %}
+                  <div class="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center">
+                    <svg class="w-12 h-12 text-primary-300 dark:text-slate-500"
+                         fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z">
+                      </path>
+                    </svg>
+                  </div>
+                {% endif %}
+                <!-- Sentiment Badge -->
+                {% if article.sentiment_label %}
+                  <div class="absolute top-2 right-2">
+                    <span class="badge text-xs {% if article.sentiment_label == 'positive' %}bg-green-500 text-white{% elif article.sentiment_label == 'negative' %}bg-red-500 text-white{% else %}bg-gray-500 text-white{% endif %}">
+                      {% if article.sentiment_label == 'positive' %}
+                        😊
+                      {% elif article.sentiment_label == 'negative' %}
+                        😞
+                      {% else %}
+                        😐
+                      {% endif %}
+                    </span>
+                  </div>
+                {% endif %}
+                <!-- Action Buttons Overlay -->
+                <div class="absolute top-2 left-2 flex space-x-1">
+                  {% if active_tab == 'bookmarks' %}
+                    <!-- Unbookmark Button -->
+                    {% is_bookmarked article user as is_bookmarked %}
+                    <button class="btn btn-sm bg-white/90 dark:bg-slate-800/90 shadow-lg hover:bg-white dark:hover:bg-slate-800 bookmark-btn text-yellow-500 transition-colors"
+                            data-article-id="{{ article.id }}"
+                            data-article-title="{{ article.title|escapejs }}"
+                            data-article-url="{{ article.url }}"
+                            data-bookmarked="true"
+                            title="{% trans 'Remove bookmark' %}">
+                      <svg class="w-3 h-3"
+                           fill="currentColor"
+                           stroke="currentColor"
+                           viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z">
+                        </path>
+                      </svg>
+                    </button>
+                  {% elif active_tab == 'likes' %}
+                    <!-- Unlike Button -->
+                    {% is_liked article user as is_liked %}
+                    <button class="btn btn-sm bg-white/90 dark:bg-slate-800/90 shadow-lg hover:bg-white dark:hover:bg-slate-800 like-btn text-red-500 transition-colors"
+                            data-article-id="{{ article.id }}"
+                            data-article-title="{{ article.title|escapejs }}"
+                            data-article-url="{{ article.url }}"
+                            data-liked="true"
+                            title="{% trans 'Unlike' %}">
+                      <svg class="w-3 h-3"
+                           fill="currentColor"
+                           stroke="currentColor"
+                           viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                        </path>
+                      </svg>
+                    </button>
+                  {% endif %}
+                  <!-- Share Button (always visible) -->
+                  <button class="btn btn-sm bg-white/90 dark:bg-slate-800/90 shadow-lg hover:bg-white dark:hover:bg-slate-800 share-btn text-gray-400 hover:text-blue-500 transition-colors"
+                          data-url="{{ article.url }}"
+                          data-title="{{ article.title|escapejs }}"
+                          title="{% trans 'Share' %}">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z">
+                      </path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <!-- Article Content -->
+              <div class="p-4">
+                <!-- Categories -->
+                {% if article.categories.all %}
+                  <div class="flex flex-wrap gap-1 mb-2">
+                    {% for category in article.categories.all|slice:":2" %}
+                      <span class="badge badge-primary text-xs">{{ category.name }}</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                <!-- Title -->
+                <a href="{{ article.url }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   onclick="trackArticleClick({{ article.id }})"
+                   class="block">
+                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white hover:text-primary-700 dark:hover:text-primary-400 transition-colors duration-200 leading-tight mb-2">
+                    {{ article.title|truncatewords:12 }}
+                  </h3>
+                </a>
+                <!-- Summary -->
+                {% if article.summary %}
+                  <p class="text-gray-600 dark:text-slate-400 text-sm leading-relaxed mb-3">{{ article.summary|truncatewords:15 }}</p>
+                {% endif %}
+                <!-- Meta Information -->
+                <div class="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400">
+                  <div class="flex items-center space-x-2">
+                    <!-- Source -->
+                    <span class="font-medium text-gray-700 dark:text-slate-300">{{ article.source.name|truncatewords:2 }}</span>
+                    <!-- Reading Time -->
+                    <span class="flex items-center">📖 {{ article.read_time }}min</span>
+                  </div>
+                  <!-- Published Time -->
+                  <span title="{{ article.published_at }}">{{ article.published_at|timesince }} ago</span>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        <!-- Pagination -->
+        {% if articles.has_other_pages %}
+          <div class="flex justify-center">
+            <nav class="flex items-center space-x-2">
+              {% if articles.has_previous %}
+                <a href="?tab={{ active_tab }}&page={{ articles.previous_page_number }}"
+                   class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700">
+                  {% trans "Previous" %}
+                </a>
+              {% endif %}
+              <span class="px-3 py-2 text-sm font-medium text-gray-700 dark:text-slate-300">
+                {% blocktrans with current=articles.number total=articles.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}
+              </span>
+              {% if articles.has_next %}
+                <a href="?tab={{ active_tab }}&page={{ articles.next_page_number }}"
+                   class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-700">
+                  {% trans "Next" %}
+                </a>
+              {% endif %}
+            </nav>
+          </div>
+        {% endif %}
+      {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+          <div class="mx-auto w-24 h-24 mb-4">
+            {% if active_tab == 'bookmarks' %}
+              <svg class="w-full h-full text-gray-400 dark:text-slate-500"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z">
+                </path>
+              </svg>
+            {% elif active_tab == 'likes' %}
+              <svg class="w-full h-full text-gray-400 dark:text-slate-500"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                </path>
+              </svg>
+            {% else %}
+              <svg class="w-full h-full text-gray-400 dark:text-slate-500"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z">
+                </path>
+              </svg>
+            {% endif %}
+          </div>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">
+            {% if active_tab == 'bookmarks' %}
+              {% trans "No bookmarked articles" %}
+            {% elif active_tab == 'likes' %}
+              {% trans "No liked articles" %}
+            {% else %}
+              {% trans "No shared articles" %}
+            {% endif %}
+          </h3>
+          <p class="text-gray-500 dark:text-slate-400 mb-6">
+            {% if active_tab == 'bookmarks' %}
+              {% trans "Start bookmarking articles to save them for later reading." %}
+            {% elif active_tab == 'likes' %}
+              {% trans "Like articles to show your appreciation and build your preference profile." %}
+            {% else %}
+              {% trans "Articles you share will appear here." %}
+            {% endif %}
+          </p>
+          <a href="{% url 'news:home' %}"
+             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
+            {% trans "Explore Articles" %}
+          </a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  <!-- Include Share Modal -->
+  {% include "news/partials/share_modal.html" %}
+{% endblock %}
+{% block extra_js %}
+  <script>
+    // Refresh page when bookmark/like is removed to update the list
+    document.addEventListener('DOMContentLoaded', function() {
+      const originalShowToast = window.newsflow.showToast;
+
+      window.newsflow.showToast = function(message, type) {
+        originalShowToast.call(this, message, type);
+
+        // If we're on the dashboard and an item was removed, refresh after a short delay
+        if ((message.includes('removed') || message.includes('unliked')) && window.location.pathname.includes('dashboard')) {
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        }
+      };
+    });
+  </script>
+{% endblock %}

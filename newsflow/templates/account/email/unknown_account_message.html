@@ -1,0 +1,35 @@
+{% extends "emails/base_email.html" %}
+
+{% load i18n %}
+
+{% block email_title %}Account Not Found{% endblock %}
+{% block email_content %}
+  <h1 class="email-title">{% trans "Account Not Found" %}</h1>
+  <p class="email-text">{% blocktrans %}Hello from Newsflow!{% endblocktrans %}</p>
+  <p class="email-text">
+    {% blocktrans with email=email %}You are receiving this email because you, or someone else, tried to access an account with email {{ email }}. However, we do not have any record of such an account in our database.{% endblocktrans %}
+  </p>
+  <div class="feature-box">
+    <h3>{% trans "What you can do:" %}</h3>
+    <ul class="feature-list">
+      <li>{% trans "If this was you, you can create a new account using the button below" %}</li>
+      <li>{% trans "If this wasn't you, you can safely ignore this email" %}</li>
+      <li>{% trans "Double-check that you're using the correct email address" %}</li>
+    </ul>
+  </div>
+  <p class="email-text">{% trans "If it was you, you can sign up for an account using the link below:" %}</p>
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="{{ signup_url }}" class="email-button">{% trans "Create Your Account" %}</a>
+  </div>
+  <p class="email-text">{% trans "This email can be safely ignored if you did not initiate this action." %}</p>
+  <div class="feature-box">
+    <h3>{% trans "Why choose Newsflow?" %}</h3>
+    <ul class="feature-list">
+      <li>{% trans "AI-powered personalized news curation" %}</li>
+      <li>{% trans "Content from 100+ trusted global sources" %}</li>
+      <li>{% trans "Smart filtering and categorization" %}</li>
+      <li>{% trans "Ad-free, clean reading experience" %}</li>
+    </ul>
+  </div>
+  <p class="email-text">{% trans "Thank you for your interest in Newsflow!" %}</p>
+{% endblock %}

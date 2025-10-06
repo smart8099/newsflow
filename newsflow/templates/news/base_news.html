@@ -1,0 +1,551 @@
+{% extends "base.html" %}
+
+{% load static i18n %}
+
+{% block title %}
+  {% block news_title %}
+    NewsFlow - AI-Powered News
+  {% endblock news_title %}
+{% endblock title %}
+{% block bodyclass %}
+  news-interface
+{% endblock bodyclass %}
+{% block body %}
+  <!-- Enhanced Navigation for News -->
+  <nav class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-soft sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center h-16">
+        <!-- Logo -->
+        <div class="flex-shrink-0 flex items-center">
+          <a href="{% url 'news:home' %}" class="text-xl font-bold text-gradient">
+            <span class="text-primary-600 dark:text-primary-400">News</span><span class="text-primary-800 dark:text-primary-300">flow</span>
+          </a>
+        </div>
+        <!-- Desktop Search Bar -->
+        <div class="flex-1 max-w-lg mx-4" style="display: none;">
+          <div class="relative w-full">
+            <form method="get" action="{% url 'news:search' %}" class="w-full">
+              <input type="search"
+                     name="q"
+                     value="{{ request.GET.q }}"
+                     style="width: 100%;
+                            padding: 8px 48px 8px 40px;
+                            border: 1px solid #d1d5db;
+                            border-radius: 8px;
+                            background: white;
+                            font-size: 14px;
+                            color: #111827;
+                            outline: none;
+                            transition: border-color 0.2s, box-shadow 0.2s"
+                     placeholder="Search news articles..."
+                     hx-get="{% url 'news:autocomplete-html' %}"
+                     hx-trigger="keyup changed delay:300ms"
+                     hx-target="#search-suggestions"
+                     autocomplete="off"
+                     onfocus="this.style.borderColor='#4994e8'; this.style.boxShadow='0 0 0 2px rgba(73, 148, 232, 0.2)';"
+                     onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none';" />
+              <div style="position: absolute;
+                          left: 12px;
+                          top: 50%;
+                          transform: translateY(-50%);
+                          pointer-events: none">
+                <svg style="width: 16px;
+                            height: 16px;
+                            color: #9ca3af"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+                  </path>
+                </svg>
+              </div>
+              <button type="submit"
+                      style="position: absolute;
+                             right: 12px;
+                             top: 50%;
+                             transform: translateY(-50%);
+                             color: #4994e8;
+                             background: none;
+                             border: none;
+                             cursor: pointer;
+                             padding: 4px">
+                <svg style="width: 16px;
+                            height: 16px"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                </svg>
+              </button>
+            </form>
+            <!-- Search Suggestions Dropdown -->
+            <div id="search-suggestions"
+                 class="hidden absolute top-full left-0 right-0 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-b-lg shadow-lg z-50 mt-1">
+              <!-- HTMX will populate this -->
+            </div>
+          </div>
+        </div>
+        <script>
+          // Show search bar on larger screens
+          function updateSearchVisibility() {
+            const searchBar = document.querySelector('.flex-1.max-w-lg.mx-4');
+            if (searchBar) {
+              if (window.innerWidth >= 768) { // md breakpoint
+                searchBar.style.display = 'flex';
+                searchBar.style.alignItems = 'center';
+              } else {
+                searchBar.style.display = 'none';
+              }
+            }
+          }
+
+          // Run on load and resize
+          document.addEventListener('DOMContentLoaded', updateSearchVisibility);
+          window.addEventListener('resize', updateSearchVisibility);
+
+          // Let the autocomplete template handle dropdown visibility
+          // The autocomplete_suggestions.html template includes its own JavaScript for handling suggestions
+
+          // Ensure CSS classes work properly for autocomplete
+          document.addEventListener('DOMContentLoaded', function() {
+            const suggestionsDiv = document.getElementById('search-suggestions');
+            if (suggestionsDiv) {
+              // Add any missing styles for proper rendering
+              suggestionsDiv.style.position = 'absolute';
+              suggestionsDiv.style.top = '100%';
+              suggestionsDiv.style.left = '0';
+              suggestionsDiv.style.right = '0';
+              suggestionsDiv.style.zIndex = '50';
+              suggestionsDiv.style.marginTop = '4px';
+            }
+          });
+        </script>
+        <!-- Mobile Search Button -->
+        <div class="md:hidden">
+          <button type="button"
+                  onclick="openMobileSearch()"
+                  class="p-2 text-gray-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-lg"
+                  aria-label="{% trans 'Open search' %}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+              </path>
+            </svg>
+          </button>
+        </div>
+        <!-- Right side navigation -->
+        <div class="flex items-center space-x-4 ml-auto">
+          <!-- Theme Toggle -->
+          {% include 'includes/theme_toggle.html' %}
+          {% if request.user.is_authenticated %}
+            <!-- Bookmarks -->
+            <a href="{% url 'news:bookmarks' %}"
+               class="text-gray-600 dark:text-slate-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+               title="Bookmarks">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z">
+                </path>
+              </svg>
+            </a>
+            <!-- User Dropdown -->
+            <div class="relative">
+              <button type="button"
+                      class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                      id="user-menu-button"
+                      aria-expanded="false"
+                      data-dropdown-toggle="user-dropdown"
+                      data-dropdown-placement="bottom">
+                <span class="sr-only">Open user menu</span>
+                <div class="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                  <span class="text-sm font-semibold text-primary-700 dark:text-primary-300">{{ request.user.email|first|upper }}</span>
+                </div>
+                <svg class="ml-2 h-4 w-4 text-gray-400"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+              <!-- Dropdown menu -->
+              <div class="z-50 hidden my-4 text-base list-none bg-white dark:bg-slate-800 divide-y divide-gray-100 dark:divide-slate-700 rounded-lg shadow-lg"
+                   id="user-dropdown">
+                <div class="px-4 py-3">
+                  <span class="block text-sm text-gray-900 dark:text-slate-100">{{ request.user.name|default:"User" }}</span>
+                  <span class="block text-sm text-gray-500 dark:text-slate-400 truncate">{{ request.user.email }}</span>
+                </div>
+                <ul class="py-2" aria-labelledby="user-menu-button">
+                  <li>
+                    <a href="{% url 'users:update' %}"
+                       class="block px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-primary-50 dark:hover:bg-slate-700 hover:text-primary-700 dark:hover:text-primary-400 transition-colors">
+                      <svg class="w-4 h-4 mr-2 inline-block"
+                           fill="none"
+                           stroke="currentColor"
+                           viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                      </svg>
+                      Settings
+                    </a>
+                  </li>
+                  {% if request.user.is_staff %}
+                    <li>
+                      <a href="{% url 'news:admin-dashboard' %}"
+                         class="block px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-700 dark:hover:text-orange-400 transition-colors">
+                        <svg class="w-4 h-4 mr-2 inline-block"
+                             fill="none"
+                             stroke="currentColor"
+                             viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                          </path>
+                        </svg>
+                        Admin Dashboard
+                      </a>
+                    </li>
+                  {% endif %}
+                  <li>
+                    <a href="{% url 'account_logout' %}"
+                       class="block px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-400 transition-colors">
+                      <svg class="w-4 h-4 mr-2 inline-block"
+                           fill="none"
+                           stroke="currentColor"
+                           viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                        </path>
+                      </svg>
+                      {% trans "Sign Out" %}
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          {% else %}
+            <a href="{% url 'account_login' %}" class="btn btn-secondary btn-sm">{% trans "Sign In" %}</a>
+            {% if ACCOUNT_ALLOW_REGISTRATION %}
+              <a href="{% url 'account_signup' %}" class="btn btn-primary btn-sm">{% trans "Sign Up" %}</a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <!-- Category Navigation -->
+    {% include 'news/partials/category_nav.html' %}
+  </nav>
+  <!-- Messages -->
+  {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+      {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}"
+             x-data="{ show: true }"
+             x-show="show">
+          <div class="flex justify-between items-center">
+            <span>{{ message }}</span>
+            <button @click="show = false" class="ml-4">
+              <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <!-- Main Content -->
+  <main class="min-h-screen bg-gray-50 dark:bg-gray-900">
+    {% block news_content %}
+    {% endblock news_content %}
+  </main>
+  <!-- Share Modal -->
+  {% include 'news/partials/share_modal.html' %}
+  <!-- Summary Modal for Mobile-Optimized Reading -->
+  {% include 'news/partials/summary_modal.html' %}
+  <!-- Mobile Sidebar Sheet -->
+  {% block mobile_sidebar %}
+    {% include 'news/partials/mobile_sidebar_sheet.html' %}
+  {% endblock mobile_sidebar %}
+  <!-- Mobile Search Overlay -->
+  <div id="mobile-search-overlay"
+       class="fixed inset-0 z-50 hidden md:hidden"
+       aria-labelledby="mobile-search-title"
+       role="dialog"
+       aria-modal="true">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300 ease-out"
+         onclick="closeMobileSearch()"
+         aria-hidden="true"></div>
+    <!-- Search Container -->
+    <div class="fixed inset-x-0 top-0 bg-white dark:bg-slate-800 shadow-xl transform transition-transform duration-300 ease-out -translate-y-full"
+         id="mobile-search-content">
+      <!-- Search Header -->
+      <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700">
+        <h2 id="mobile-search-title"
+            class="text-lg font-semibold text-gray-900 dark:text-white">{% trans "Search News" %}</h2>
+        <button type="button"
+                onclick="closeMobileSearch()"
+                class="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-lg p-1">
+          <span class="sr-only">{% trans "Close search" %}</span>
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <!-- Enhanced Mobile Search Form -->
+      <div class="p-4">
+        <form method="get" action="{% url 'news:search' %}" class="space-y-4">
+          <!-- Main Search Input -->
+          <div class="relative">
+            <input type="search"
+                   name="q"
+                   id="mobile-search-input"
+                   value="{{ request.GET.q }}"
+                   class="w-full pl-12 pr-4 py-4 text-lg border border-gray-300 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-slate-400"
+                   placeholder="Search for news, topics, sources..."
+                   hx-get="{% url 'news:autocomplete-html' %}"
+                   hx-trigger="keyup changed delay:300ms"
+                   hx-target="#mobile-search-suggestions"
+                   autocomplete="off" />
+            <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
+              <svg class="w-6 h-6 text-gray-400"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+                </path>
+              </svg>
+            </div>
+          </div>
+          <!-- Quick Search Filters -->
+          <div class="flex flex-wrap gap-2">
+            <span class="text-sm font-medium text-gray-700 dark:text-slate-300">{% trans "Quick filters:" %}</span>
+            <button type="button"
+                    onclick="setMobileSearchQuery('breaking news')"
+                    class="search-filter-btn">Breaking News</button>
+            <button type="button"
+                    onclick="setMobileSearchQuery('technology')"
+                    class="search-filter-btn">Technology</button>
+            <button type="button"
+                    onclick="setMobileSearchQuery('business')"
+                    class="search-filter-btn">Business</button>
+            <button type="button"
+                    onclick="setMobileSearchQuery('politics')"
+                    class="search-filter-btn">Politics</button>
+          </div>
+          <!-- Search Button -->
+          <button type="submit"
+                  class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-4 px-6 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 flex items-center justify-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+              </path>
+            </svg>
+            <span>{% trans "Search Articles" %}</span>
+          </button>
+        </form>
+        <!-- Mobile Search Suggestions -->
+        <div id="mobile-search-suggestions" class="mt-4 space-y-2">
+          <!-- HTMX will populate this -->
+        </div>
+        <!-- Popular Searches -->
+        <div class="mt-6">
+          <h3 class="text-sm font-medium text-gray-700 dark:text-slate-300 mb-3">{% trans "Popular Searches" %}</h3>
+          <div class="flex flex-wrap gap-2">
+            <a href="{% url 'news:search' %}?q=AI"
+               onclick="closeMobileSearch()"
+               class="popular-search-tag">AI</a>
+            <a href="{% url 'news:search' %}?q=climate"
+               onclick="closeMobileSearch()"
+               class="popular-search-tag">Climate</a>
+            <a href="{% url 'news:search' %}?q=cryptocurrency"
+               onclick="closeMobileSearch()"
+               class="popular-search-tag">Cryptocurrency</a>
+            <a href="{% url 'news:search' %}?q=space"
+               onclick="closeMobileSearch()"
+               class="popular-search-tag">Space</a>
+            <a href="{% url 'news:search' %}?q=health"
+               onclick="closeMobileSearch()"
+               class="popular-search-tag">Health</a>
+            <a href="{% url 'news:search' %}?q=sports"
+               onclick="closeMobileSearch()"
+               class="popular-search-tag">Sports</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Floating Action Button for Mobile -->
+  <button type="button"
+          onclick="openMobileSidebar()"
+          class="fixed bottom-6 right-6 z-40 lg:hidden bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-600 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-800"
+          aria-label="{% trans 'Open navigation menu' %}">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+    </svg>
+  </button>
+  <!-- Footer -->
+  <footer class="bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <div class="text-xl font-bold text-gradient mb-4">
+            <span class="text-primary-600 dark:text-primary-400">News</span><span class="text-primary-800 dark:text-primary-300">flow</span>
+          </div>
+          <p class="text-gray-600 dark:text-slate-400 text-sm">
+            AI-powered news aggregation platform that intelligently curates content from 100+ global sources.
+          </p>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Quick Links</h3>
+          <ul class="space-y-2 text-sm">
+            <li>
+              <a href="{% url 'news:trending' %}"
+                 class="text-gray-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400">Trending</a>
+            </li>
+            <li>
+              <a href="{% url 'news:category' 'technology' %}"
+                 class="text-gray-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400">Technology</a>
+            </li>
+            <li>
+              <a href="{% url 'news:category' 'business' %}"
+                 class="text-gray-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400">Business</a>
+            </li>
+            <li>
+              <a href="{% url 'news:category' 'science' %}"
+                 class="text-gray-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400">Science</a>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-4">About</h3>
+          <ul class="space-y-2 text-sm">
+            <li>
+              <a href="{% url 'about' %}"
+                 class="text-gray-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400">About Us</a>
+            </li>
+            <li>
+              <a href="#"
+                 class="text-gray-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400">Privacy Policy</a>
+            </li>
+            <li>
+              <a href="#"
+                 class="text-gray-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400">Terms of Service</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="border-t border-gray-200 dark:border-slate-700 mt-8 pt-6 text-center">
+        <p class="text-gray-500 dark:text-slate-400 text-sm">&copy; {% now "Y" %} NewsFlow. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+{% endblock body %}
+{% block javascript %}
+  {{ block.super }}
+  <script defer src="{% static 'js/newsflow.js' %}"></script>
+  <!-- Mobile Search Functionality -->
+  <style>
+    .search-filter-btn {
+      @apply text-xs bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-300 hover:bg-primary-100 dark:hover:bg-primary-900 hover:text-primary-700 dark:hover:text-primary-300 px-3 py-1.5 rounded-full transition-colors;
+    }
+
+    .popular-search-tag {
+      @apply text-xs bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 hover:bg-primary-200 dark:hover:bg-primary-800 px-3 py-1.5 rounded-full transition-colors;
+    }
+
+    /* Mobile Search Animations */
+    #mobile-search-overlay.show #mobile-search-content {
+      transform: translateY(0);
+    }
+
+    #mobile-search-overlay.show {
+      display: block !important;
+    }
+  </style>
+  <script>
+    // Mobile Search Functions
+    let isSearchAnimating = false;
+
+    function openMobileSearch() {
+      if (isSearchAnimating) return;
+
+      isSearchAnimating = true;
+      const overlay = document.getElementById('mobile-search-overlay');
+      const body = document.body;
+
+      // Prevent background scrolling
+      const scrollY = body.style.top;
+      body.style.position = 'fixed';
+      body.style.top = `-${window.scrollY}px`;
+      body.style.width = '100%';
+
+      overlay.classList.remove('hidden');
+      overlay.setAttribute('aria-hidden', 'false');
+
+      // Trigger animation
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          overlay.classList.add('show');
+          isSearchAnimating = false;
+
+          // Focus on search input
+          setTimeout(() => {
+            const searchInput = document.getElementById('mobile-search-input');
+            if (searchInput) {
+              searchInput.focus();
+            }
+          }, 300);
+        });
+      });
+    }
+
+    function closeMobileSearch() {
+      if (isSearchAnimating) return;
+
+      isSearchAnimating = true;
+      const overlay = document.getElementById('mobile-search-overlay');
+      const body = document.body;
+
+      overlay.classList.remove('show');
+      overlay.setAttribute('aria-hidden', 'true');
+
+      // Restore background scrolling
+      const scrollY = body.style.top;
+      body.style.position = '';
+      body.style.top = '';
+      body.style.width = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+
+      // Hide after animation completes
+      setTimeout(() => {
+        overlay.classList.add('hidden');
+        isSearchAnimating = false;
+      }, 300);
+    }
+
+    function setMobileSearchQuery(query) {
+      const searchInput = document.getElementById('mobile-search-input');
+      if (searchInput) {
+        searchInput.value = query;
+        searchInput.focus();
+      }
+    }
+
+    // Close mobile search with Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && !document.getElementById('mobile-search-overlay').classList.contains('hidden')) {
+        closeMobileSearch();
+      }
+    });
+
+    // Auto-close mobile search if screen becomes large
+    let searchResizeTimeout;
+    window.addEventListener('resize', function() {
+      clearTimeout(searchResizeTimeout);
+      searchResizeTimeout = setTimeout(function() {
+        if (window.innerWidth >= 768) { // md breakpoint
+          const overlay = document.getElementById('mobile-search-overlay');
+          if (overlay && !overlay.classList.contains('hidden')) {
+            closeMobileSearch();
+          }
+        }
+      }, 250);
+    });
+  </script>
+{% endblock javascript %}

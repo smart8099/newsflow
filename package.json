@@ -1,0 +1,26 @@
+{
+  "name": "newsflow",
+  "version": "1.0.0",
+  "description": "AI-powered news aggregation platform",
+  "scripts": {
+    "build-css": "tailwindcss -i ./newsflow/static/css/input.css -o ./newsflow/static/css/output.css --minify",
+    "watch-css": "tailwindcss -i ./newsflow/static/css/input.css -o ./newsflow/static/css/output.css --watch",
+    "dev": "concurrently \"npm run watch-css\" \"python manage.py runserver\"",
+    "dev-css": "tailwindcss -i ./newsflow/static/css/input.css -o ./newsflow/static/css/output.css --watch --poll",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.1",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.10",
+    "concurrently": "^8.2.2",
+    "flowbite": "^2.2.1",
+    "tailwindcss": "^3.4.0"
+  },
+  "dependencies": {
+    "flowbite": "^2.2.1"
+  }
+}

@@ -1,0 +1,130 @@
+{% extends "news/base_news.html" %}
+
+{% load static i18n %}
+
+{% block news_title %}
+  Bookmarks - {{ block.super }}
+{% endblock news_title %}
+{% block news_content %}
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <svg class="w-8 h-8 inline-block mr-3 text-yellow-600"
+             fill="currentColor"
+             viewBox="0 0 24 24">
+          <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+        </svg>
+        Your Bookmarks
+      </h1>
+      <p class="text-gray-600 dark:text-slate-400">
+        {% if total_bookmarks %}
+          {{ total_bookmarks }} saved article{{ total_bookmarks|pluralize }}
+        {% else %}
+          No bookmarked articles yet
+        {% endif %}
+      </p>
+    </div>
+    {% if bookmarked_articles %}
+      <!-- Bookmarked Articles Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {% for bookmark in bookmarked_articles %}
+          <article class="news-card bg-white dark:bg-slate-800 rounded-lg shadow-soft hover:shadow-lg transition-all duration-200 border border-gray-200 dark:border-slate-700">
+            <div class="p-6">
+              <!-- Source and Date -->
+              <div class="flex items-center justify-between text-xs text-gray-500 dark:text-slate-400 mb-3">
+                <span class="font-medium">{{ bookmark.article.source.name }}</span>
+                <time datetime="{{ bookmark.article.published_at|date:'c' }}">
+                  {{ bookmark.article.published_at|timesince }} ago
+                </time>
+              </div>
+              <!-- Article Title -->
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3 line-clamp-3 leading-tight">
+                <a href="{{ bookmark.article.url }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   onclick="trackArticleClick({{ bookmark.article.id }})"
+                   class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                  {{ bookmark.article.title }}
+                </a>
+              </h2>
+              <!-- Description -->
+              {% if bookmark.article.description %}
+                <p class="text-gray-600 dark:text-slate-300 text-sm mb-4 line-clamp-3">
+                  {{ bookmark.article.description|truncatewords:20 }}
+                </p>
+              {% endif %}
+              <!-- Actions -->
+              <div class="flex items-center justify-between">
+                <a href="{{ bookmark.article.url }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   onclick="trackArticleClick({{ bookmark.article.id }})"
+                   class="btn btn-sm btn-primary">Read Article</a>
+                <!-- Remove Bookmark Button -->
+                <button class="btn btn-sm bg-gray-100 dark:bg-slate-700 hover:bg-red-100 dark:hover:bg-red-900/20 bookmark-btn text-red-500 hover:text-red-600 transition-colors"
+                        data-article-id="{{ bookmark.article.id }}"
+                        data-bookmarked="true"
+                        title="Remove bookmark">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                  </svg>
+                </button>
+              </div>
+              <!-- Bookmark Date -->
+              <div class="mt-3 pt-3 border-t border-gray-200 dark:border-slate-700">
+                <p class="text-xs text-gray-500 dark:text-slate-400">Bookmarked {{ bookmark.created|timesince }} ago</p>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+      <!-- Pagination -->
+      {% if is_paginated %}
+        <div class="flex justify-center items-center space-x-4 mt-8">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}"
+               class="btn btn-secondary btn-sm">
+              <svg class="w-4 h-4 mr-1"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+              Previous
+            </a>
+          {% endif %}
+          <span class="text-sm text-gray-600 dark:text-slate-400">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+          </span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}"
+               class="btn btn-secondary btn-sm">
+              Next
+              <svg class="w-4 h-4 ml-1"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% else %}
+      <!-- Empty State -->
+      <div class="text-center py-16">
+        <svg class="w-16 h-16 mx-auto text-gray-400 dark:text-slate-500 mb-4"
+             fill="none"
+             stroke="currentColor"
+             viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z">
+          </path>
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No bookmarks yet</h3>
+        <p class="text-gray-600 dark:text-slate-400 mb-6">Start bookmarking articles to read them later</p>
+        <a href="{% url 'news:home' %}" class="btn btn-primary">Browse Articles</a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock news_content %}

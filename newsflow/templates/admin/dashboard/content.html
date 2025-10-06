@@ -1,0 +1,302 @@
+{% extends "admin/dashboard/base_admin.html" %}
+
+{% load i18n humanize %}
+
+{% block page_title %}
+  {% trans "Content Management" %}
+{% endblock page_title %}
+{% block page_description %}
+  {% trans "Article and source management with filtering and search" %}
+{% endblock page_description %}
+{% block admin_content %}
+  <!-- Content Metrics -->
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+    <div class="admin-metric-card">
+      <div class="admin-metric-value">{{ total_articles|intcomma }}</div>
+      <div class="admin-metric-label">{% trans "Total Articles" %}</div>
+    </div>
+    <div class="admin-metric-card">
+      <div class="admin-metric-value">{{ published_articles|intcomma }}</div>
+      <div class="admin-metric-label">{% trans "Published" %}</div>
+    </div>
+    <div class="admin-metric-card">
+      <div class="admin-metric-value">{{ draft_articles|intcomma }}</div>
+      <div class="admin-metric-label">{% trans "Drafts" %}</div>
+    </div>
+    <div class="admin-metric-card">
+      <div class="admin-metric-value">{{ featured_articles|intcomma }}</div>
+      <div class="admin-metric-label">{% trans "Featured" %}</div>
+    </div>
+    <div class="admin-metric-card">
+      <div class="admin-metric-value">{{ articles_last_24h|intcomma }}</div>
+      <div class="admin-metric-label">{% trans "Today" %}</div>
+    </div>
+  </div>
+  <!-- Quality Metrics -->
+  <div class="admin-chart-container mb-8">
+    <h3 class="admin-chart-title">{% trans "Content Quality Metrics" %}</h3>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600">
+        <div class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ quality_metrics.articles_with_images|intcomma }}
+        </div>
+        <div class="text-sm text-gray-600 dark:text-slate-400">{% trans "Articles with Images" %}</div>
+      </div>
+      <div class="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600">
+        <div class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ quality_metrics.articles_with_summaries|intcomma }}
+        </div>
+        <div class="text-sm text-gray-600 dark:text-slate-400">{% trans "Articles with Summaries" %}</div>
+      </div>
+      <div class="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600">
+        <div class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ quality_metrics.articles_with_keywords|intcomma }}
+        </div>
+        <div class="text-sm text-gray-600 dark:text-slate-400">{% trans "Articles with Keywords" %}</div>
+      </div>
+      <div class="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600">
+        <div class="text-2xl font-bold text-gray-900 dark:text-white">
+          {{ quality_metrics.articles_with_sentiment|intcomma }}
+        </div>
+        <div class="text-sm text-gray-600 dark:text-slate-400">{% trans "Articles with Sentiment" %}</div>
+      </div>
+    </div>
+  </div>
+  <!-- Filters and Search -->
+  <div class="admin-chart-container mb-6">
+    <h3 class="admin-chart-title">{% trans "Filter Articles" %}</h3>
+    <form method="get"
+          class="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-5 lg:gap-4 lg:items-end">
+      <!-- Category Filter -->
+      <div class="lg:col-span-1">
+        <label for="category"
+               class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{% trans "Category" %}</label>
+        <select name="category" id="category" class="admin-form-select w-full">
+          {% for value, label in category_choices %}
+            <option value="{{ value }}"
+                    {% if value == current_category %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <!-- Status Filter -->
+      <div class="lg:col-span-1">
+        <label for="status"
+               class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{% trans "Status" %}</label>
+        <select name="status" id="status" class="admin-form-select w-full">
+          {% for value, label in status_choices %}
+            <option value="{{ value }}"
+                    {% if value == current_status %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <!-- Source Filter -->
+      <div class="lg:col-span-1">
+        <label for="source"
+               class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{% trans "Source" %}</label>
+        <select name="source" id="source" class="admin-form-select w-full">
+          <option value="">{% trans "All Sources" %}</option>
+          {% for src in sources %}
+            <option value="{{ src.id }}"
+                    {% if src.id|stringformat:"s" == current_source %}selected{% endif %}>{{ src.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <!-- Search -->
+      <div class="lg:col-span-1">
+        <label for="search"
+               class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">{% trans "Search" %}</label>
+        <input type="text"
+               name="search"
+               id="search"
+               value="{{ current_search }}"
+               placeholder="{% trans 'Title, content, or author...' %}"
+               class="admin-form-select w-full" />
+      </div>
+      <!-- Submit -->
+      <div class="lg:col-span-1 lg:flex lg:justify-end">
+        <button type="submit"
+                class="admin-btn admin-btn-primary w-full lg:w-auto lg:px-6">
+          <svg class="w-4 h-4 mr-2"
+               fill="none"
+               stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+            </path>
+          </svg>
+          {% trans "Filter" %}
+        </button>
+      </div>
+    </form>
+    <!-- Results Summary -->
+    {% if total_filtered != total_articles %}
+      <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <p class="text-sm text-blue-800 dark:text-blue-200">
+          {% blocktrans with count=total_filtered total=total_articles %}
+            Showing {{ count }} of {{ total }} articles
+          {% endblocktrans %}
+          <a href="{% url 'news:admin-content' %}"
+             class="ml-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline">
+            {% trans "Clear filters" %}
+          </a>
+        </p>
+      </div>
+    {% endif %}
+  </div>
+  <!-- Articles Table -->
+  <div class="admin-chart-container">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="admin-chart-title mb-0">
+        {% trans "Articles" %}
+        {% if page_obj %}
+          <span class="text-sm font-normal text-gray-500 dark:text-slate-400">
+            ({{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }})
+          </span>
+        {% endif %}
+      </h3>
+    </div>
+    {% if articles %}
+      <div class="overflow-x-auto">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>{% trans "Article" %}</th>
+              <th>{% trans "Source" %}</th>
+              <th>{% trans "Category" %}</th>
+              <th>{% trans "Views" %}</th>
+              <th>{% trans "Status" %}</th>
+              <th>{% trans "Published" %}</th>
+              <th>{% trans "Actions" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for article in articles %}
+              <tr>
+                <td>
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">{{ article.title|truncatechars:60 }}</div>
+                  {% if article.is_featured %}<span class="admin-badge warning mt-1">⭐ Featured</span>{% endif %}
+                  <div class="text-xs text-gray-500 dark:text-slate-400 mt-1">
+                    {% trans "By" %} {{ article.author|default:"Unknown" }}
+                  </div>
+                </td>
+                <td>
+                  <span class="admin-badge secondary">{{ article.source.name }}</span>
+                </td>
+                <td>
+                  <span class="admin-badge info">{{ article.source.get_primary_category_display }}</span>
+                </td>
+                <td>
+                  <span class="admin-badge info">{{ article.view_count|intcomma }}</span>
+                </td>
+                <td>
+                  {% if article.is_published %}
+                    <span class="admin-badge success">{% trans "Published" %}</span>
+                  {% else %}
+                    <span class="admin-badge warning">{% trans "Draft" %}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="admin-badge secondary">{{ article.published_at|date:"M j, Y" }}</span>
+                </td>
+                <td>
+                  <div class="flex space-x-1">
+                    <a href="{{ article.url }}"
+                       target="_blank"
+                       class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                       title="{% trans 'View Article' %}">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                        </path>
+                      </svg>
+                    </a>
+                    <a href="/admin/news/article/{{ article.id }}/change/"
+                       class="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                       title="{% trans 'Edit in Admin' %}">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                        </path>
+                      </svg>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <!-- Pagination -->
+      {% if is_paginated %}
+        <div class="mt-6 flex items-center justify-between border-t border-gray-200 dark:border-slate-700 pt-4">
+          <div class="flex-1 flex justify-between sm:hidden">
+            {% if page_obj.has_previous %}
+              <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}"
+                 class="admin-btn admin-btn-secondary">{% trans "Previous" %}</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+              <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}"
+                 class="admin-btn admin-btn-secondary">{% trans "Next" %}</a>
+            {% endif %}
+          </div>
+          <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <p class="text-sm text-gray-700 dark:text-slate-300">
+                {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=page_obj.paginator.count %}
+                  Showing {{ start }} to {{ end }} of {{ total }} articles
+                {% endblocktrans %}
+              </p>
+            </div>
+            <div>
+              <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                {% if page_obj.has_previous %}
+                  <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}"
+                     class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm font-medium text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  </a>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                  {% if page_obj.number == num %}
+                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-slate-600 bg-primary-50 dark:bg-primary-900/20 text-sm font-medium text-primary-600 dark:text-primary-400">
+                      {{ num }}
+                    </span>
+                  {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}"
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700">
+                      {{ num }}
+                    </a>
+                  {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                  <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}"
+                     class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm font-medium text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  </a>
+                {% endif %}
+              </nav>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400"
+             fill="none"
+             stroke="currentColor"
+             viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+          </path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">{% trans "No articles found" %}</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-slate-400">
+          {% trans "Try adjusting your filters or search terms." %}
+        </p>
+        <div class="mt-6">
+          <a href="{% url 'news:admin-content' %}"
+             class="admin-btn admin-btn-primary">{% trans "Clear all filters" %}</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endblock admin_content %}
