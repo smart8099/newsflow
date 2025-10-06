@@ -1,0 +1,108 @@
+{% load i18n %}
+
+{% if suggestions %}
+  <div class="py-1 max-h-64 overflow-y-auto">
+    {% for suggestion in suggestions %}
+      <div class="px-4 py-3 hover:bg-primary-50 dark:hover:bg-slate-700 cursor-pointer border-b border-gray-100 dark:border-slate-600 last:border-b-0 transition-colors group"
+           onclick="selectSuggestion('{{ suggestion.full_text|escapejs }}')"
+           tabindex="0"
+           role="option">
+        <div class="flex items-center">
+          <span class="mr-3 text-base flex-shrink-0">{{ suggestion.icon }}</span>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 dark:text-white truncate group-hover:text-primary-700 dark:group-hover:text-primary-300">
+              {{ suggestion.text }}
+            </p>
+            {% if suggestion.type %}
+              <p class="text-xs text-gray-500 dark:text-slate-400 capitalize mt-0.5">{{ suggestion.type }}</p>
+            {% endif %}
+          </div>
+          <svg class="w-4 h-4 text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 opacity-0 group-hover:opacity-100 transition-opacity"
+               fill="none"
+               stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  {% if query %}
+    <div class="px-4 py-3 text-center text-sm text-gray-500 dark:text-slate-400">
+      <svg class="w-6 h-6 mx-auto mb-2 text-gray-300 dark:text-slate-600"
+           fill="none"
+           stroke="currentColor"
+           viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+        </path>
+      </svg>
+      {% trans "No suggestions found" %}
+    </div>
+  {% endif %}
+{% endif %}
+<script>
+  // Global function to select a suggestion
+  function selectSuggestion(text) {
+    const searchInput = document.querySelector('input[name="q"]');
+    if (searchInput) {
+      searchInput.value = text;
+      // Hide suggestions immediately
+      const searchSuggestions = document.getElementById('search-suggestions');
+      if (searchSuggestions) {
+        searchSuggestions.classList.add('hidden');
+      }
+      searchInput.form.submit();
+    }
+  }
+
+  // Setup autocomplete behavior - only run once
+  if (!window.autocompleteSetup) {
+    window.autocompleteSetup = true;
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+      const searchSuggestions = document.getElementById('search-suggestions');
+      const searchContainer = document.querySelector('.relative');
+
+      if (searchSuggestions && searchContainer && !searchContainer.contains(e.target)) {
+        searchSuggestions.classList.add('hidden');
+      }
+    });
+
+    // Show/hide suggestions based on input
+    document.addEventListener('htmx:afterRequest', function(evt) {
+      if (evt.detail.elt && evt.detail.elt.name === 'q') {
+        const searchSuggestions = document.getElementById('search-suggestions');
+        if (searchSuggestions && evt.detail.elt.value.length >= 2) {
+          searchSuggestions.classList.remove('hidden');
+        }
+      }
+    });
+
+    // Handle input focus and blur
+    document.addEventListener('focusin', function(e) {
+      if (e.target.name === 'q') {
+        const searchSuggestions = document.getElementById('search-suggestions');
+        if (searchSuggestions && e.target.value.length >= 2) {
+          searchSuggestions.classList.remove('hidden');
+        }
+      }
+    });
+
+    // Handle keyboard navigation
+    document.addEventListener('keydown', function(e) {
+      if (e.target.name === 'q') {
+        const suggestions = document.querySelectorAll('#search-suggestions [onclick]');
+        if (suggestions.length > 0) {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            suggestions[0].focus();
+          } else if (e.key === 'Escape') {
+            document.getElementById('search-suggestions').classList.add('hidden');
+          }
+        }
+      }
+    });
+  }
+</script>

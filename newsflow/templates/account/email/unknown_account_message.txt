@@ -1,0 +1,24 @@
+{% load i18n %}
+{% autoescape off %}
+{% blocktrans %}Hello from Newsflow!{% endblocktrans %}
+
+{% blocktrans with email=email %}You are receiving this email because you, or someone else, tried to access an account with email {{ email }}. However, we do not have any record of such an account in our database.{% endblocktrans %}
+
+{% blocktrans %}This email can be safely ignored if you did not initiate this action.{% endblocktrans %}
+
+{% blocktrans %}If it was you, you can sign up for an account using the link below:{% endblocktrans %}
+
+{{ signup_url }}
+
+{% blocktrans %}Why choose Newsflow?{% endblocktrans %}
+• {% trans "AI-powered personalized news curation" %}
+• {% trans "Content from 100+ trusted global sources" %}
+• {% trans "Smart filtering and categorization" %}
+• {% trans "Ad-free, clean reading experience" %}
+
+{% blocktrans %}Thank you for your interest in Newsflow!{% endblocktrans %}
+
+---
+{{ site_name|default:"Newsflow" }}
+newsflow.ai
+{% endautoescape %}

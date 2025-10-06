@@ -1,0 +1,200 @@
+{% extends "news/base_news.html" %}
+
+{% load i18n humanize %}
+
+{% block news_title %}
+  NewsFlow - Latest News
+{% endblock news_title %}
+{% block news_content %}
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Main Content (3 columns) -->
+      <div class="lg:col-span-3 space-y-8">
+        <!-- Hero Section - Featured Articles -->
+        {% if featured_articles %}
+          <section>
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                <span class="mr-2">⭐</span>
+                {% trans "Breaking News" %}
+              </h2>
+              <a href="{% url 'news:category' 'all' %}?sort=popular"
+                 class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">
+                {% trans "View all" %} →
+              </a>
+            </div>
+            <!-- Featured Articles Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {% for article in featured_articles|slice:":3" %}
+                {% include 'news/partials/news_card_primary.html' %}
+              {% endfor %}
+            </div>
+            <!-- Secondary Featured Articles -->
+            {% if featured_articles|length > 3 %}
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for article in featured_articles|slice:"3:6" %}
+                  {% include 'news/partials/news_card_secondary.html' %}
+                {% endfor %}
+              </div>
+            {% endif %}
+          </section>
+        {% endif %}
+        <!-- Latest News Section -->
+        {% if latest_articles %}
+          <section>
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                <span class="mr-2">📰</span>
+                {% trans "Latest News" %}
+              </h2>
+              <a href="{% url 'news:category' 'all' %}"
+                 class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">
+                {% trans "View all" %} →
+              </a>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {% for article in latest_articles|slice:":8" %}
+                {% include 'news/partials/news_card_secondary.html' %}
+              {% endfor %}
+            </div>
+          </section>
+        {% endif %}
+        <!-- Category Sections -->
+        {% for category_name, articles in categorized_articles.items %}
+          <section>
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                <span class="mr-2">
+                  {% if category_name == 'Technology' %}
+                    💻
+                  {% elif category_name == 'Business' %}
+                    💼
+                  {% elif category_name == 'Politics' %}
+                    🏛️
+                  {% elif category_name == 'Sports' %}
+                    ⚽
+                  {% elif category_name == 'Entertainment' %}
+                    🎬
+                  {% elif category_name == 'Health' %}
+                    🏥
+                  {% elif category_name == 'Science' %}
+                    🔬
+                  {% elif category_name == 'World' %}
+                    🌍
+                  {% else %}
+                    📄
+                  {% endif %}
+                </span>
+                {{ category_name }}
+              </h2>
+              <a href="{% url 'news:category' category_name|lower %}"
+                 class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">
+                {% trans "View all" %} →
+              </a>
+            </div>
+            <!-- Category Articles -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {% for article in articles %}
+                {% include 'news/partials/news_card_secondary.html' %}
+              {% endfor %}
+            </div>
+          </section>
+        {% endfor %}
+        <!-- Filter & Sort Section -->
+        <section class="mb-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+              <span class="mr-2">📰</span>
+              {% trans "More Articles" %}
+            </h2>
+            <!-- Filter & Sort Controls -->
+            <div class="flex items-center space-x-4">
+              <form method="get" class="flex items-center space-x-3">
+                <!-- Sort Dropdown -->
+                <select name="sort" class="form-input text-sm" onchange="this.form.submit()">
+                  <option value="latest"
+                          {% if request.GET.sort == 'latest' %}selected{% endif %}>{% trans "Latest" %}</option>
+                  <option value="popular"
+                          {% if request.GET.sort == 'popular' %}selected{% endif %}>
+                    {% trans "Most Popular" %}
+                  </option>
+                  <option value="trending"
+                          {% if request.GET.sort == 'trending' %}selected{% endif %}>{% trans "Trending" %}</option>
+                </select>
+                <!-- Category Filter -->
+                <select name="category"
+                        class="form-input text-sm"
+                        onchange="this.form.submit()">
+                  <option value="">{% trans "All Categories" %}</option>
+                  {% for category_value, category_label in category_choices %}
+                    <option value="{{ category_value }}"
+                            {% if request.GET.category == category_value %}selected{% endif %}>
+                      {{ category_label }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </form>
+            </div>
+          </div>
+          <!-- HTMX Infinite Scroll Container -->
+          <div id="articles-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Articles will be dynamically loaded here -->
+          </div>
+        </section>
+        <!-- HTMX Load More Trigger -->
+        <div class="text-center pt-8"
+             hx-get="{% url 'news:load-more' %}?page=2&type=home{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sentiment %}&sentiment={{ request.GET.sentiment }}{% endif %}{% if request.GET.source %}&source={{ request.GET.source }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}"
+             hx-target="#articles-container"
+             hx-swap="beforeend"
+             hx-trigger="revealed"
+             id="load-more-trigger">
+          <div class="flex items-center justify-center">
+            <div class="spinner w-6 h-6 mr-3"></div>
+            <span class="text-gray-600 dark:text-slate-400">{% trans "Loading more articles..." %}</span>
+          </div>
+        </div>
+      </div>
+      <!-- Sidebar (1 column) -->
+      <div class="lg:col-span-1">
+        <div class="sticky top-24">{% include 'news/partials/trending_sidebar.html' %}</div>
+      </div>
+    </div>
+  </div>
+  <!-- Infinite Scroll Loading Indicator -->
+  <div id="loading-indicator" class="hidden text-center py-8">
+    <div class="inline-flex items-center">
+      <div class="spinner w-6 h-6 mr-3"></div>
+      <span class="text-gray-600 dark:text-slate-400">{% trans "Loading more articles..." %}</span>
+    </div>
+  </div>
+  <!-- No Articles Message -->
+  {% if not featured_articles and not latest_articles and not categorized_articles %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="text-center">
+        <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gray-100 dark:bg-slate-700 mb-6">
+          <svg class="h-8 w-8 text-gray-400 dark:text-slate-500"
+               fill="none"
+               stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z">
+            </path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">{% trans "No News Available" %}</h3>
+        <p class="text-gray-600 dark:text-slate-400 mb-6">
+          {% trans "We're working on bringing you the latest news. Please check back soon!" %}
+        </p>
+        <a href="{% url 'news:home' %}" class="btn btn-primary">
+          <svg class="w-4 h-4 mr-2"
+               fill="none"
+               stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+            </path>
+          </svg>
+          {% trans "Refresh" %}
+        </a>
+      </div>
+    </div>
+  {% endif %}
+{% endblock news_content %}

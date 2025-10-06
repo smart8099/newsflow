@@ -1,0 +1,231 @@
+{% load i18n %}
+
+<!-- Reusable Filter Sidebar Component -->
+<!-- Show the sidebar if sort/sentiment are enabled OR if we have filter data -->
+{% if show_sort or show_sentiment or filter_categories or filter_sources %}
+  <div class="card sticky top-24">
+    <div class="card-header">
+      <h3 class="font-semibold text-gray-900 dark:text-white">{% trans "Filter & Sort" %}</h3>
+    </div>
+    <div class="card-body">
+      <form method="get" class="space-y-4">
+        <!-- Sort Options (common to all pages) -->
+        {% if show_sort %}
+          <div>
+            <label class="form-label">{% trans "Sort by" %}</label>
+            <select name="sort" class="form-input" onchange="this.form.submit()">
+              {% if page_type == "for-you" %}
+                <option value="relevance"
+                        {% if request.GET.sort == 'relevance' %}selected{% endif %}>
+                  {% trans "Most Relevant" %}
+                </option>
+                <option value="latest"
+                        {% if request.GET.sort == 'latest' %}selected{% endif %}>{% trans "Latest" %}</option>
+                <option value="popular"
+                        {% if request.GET.sort == 'popular' %}selected{% endif %}>{% trans "Most Popular" %}</option>
+              {% else %}
+                <option value="latest"
+                        {% if applied_filters.sort == 'latest' %}selected{% endif %}>
+                  {% trans "Latest first" %}
+                </option>
+                <option value="popular"
+                        {% if applied_filters.sort == 'popular' %}selected{% endif %}>
+                  {% trans "Most popular" %}
+                </option>
+                <option value="trending"
+                        {% if applied_filters.sort == 'trending' %}selected{% endif %}>
+                  {% trans "Trending today" %}
+                </option>
+              {% endif %}
+            </select>
+          </div>
+        {% endif %}
+        <!-- Category Filter (for search and general pages) -->
+        {% if show_category_filter %}
+          {% if filter_categories %}
+            <div>
+              <label class="form-label">
+                {% if page_type == "for-you" %}
+                  {% trans "Your Topics" %}
+                {% else %}
+                  {% trans "Category" %}
+                {% endif %}
+              </label>
+              <select name="category" class="form-input" onchange="this.form.submit()">
+                {% if page_type == "for-you" %}
+                  <option value="">{% trans "All Your Topics" %}</option>
+                  {% for category_code, category_name in filter_categories %}
+                    <option value="{{ category_code }}"
+                            {% if request.GET.category == category_code %}selected{% endif %}>
+                      {{ category_name }}
+                    </option>
+                  {% endfor %}
+                {% else %}
+                  <option value="">{% trans "All categories" %}</option>
+                  {% for facet in filter_categories %}
+                    <option value="{{ facet.source__primary_category }}"
+                            {% if applied_filters.category == facet.source__primary_category %}selected{% endif %}>
+                      {{ facet.source__primary_category|capfirst }} ({{ facet.count }})
+                    </option>
+                  {% endfor %}
+                {% endif %}
+              </select>
+            </div>
+          {% endif %}
+        {% endif %}
+        <!-- Source Filter -->
+        {% if show_source_filter %}
+          {% if filter_sources %}
+            <div>
+              <label class="form-label">
+                {% if page_type == "for-you" %}
+                  {% trans "Your Sources" %}
+                {% else %}
+                  {% trans "Source" %}
+                {% endif %}
+              </label>
+              <select name="source" class="form-input" onchange="this.form.submit()">
+                {% if page_type == "for-you" or page_type == "category" %}
+                  <!-- For You page (user preferences) or Category page (NewsSource objects) -->
+                  <option value="">
+                    {% if page_type == "for-you" %}
+                      {% trans "All Your Sources" %}
+                    {% else %}
+                      {% trans "All sources" %}
+                    {% endif %}
+                  </option>
+                  {% for source in filter_sources %}
+                    <option value="{{ source.id }}"
+                            {% if request.GET.source == source.id|stringformat:"s" %}selected{% endif %}>
+                      {{ source.name }}
+                    </option>
+                  {% endfor %}
+                {% else %}
+                  <!-- Search page (faceted data with counts) -->
+                  <option value="">{% trans "All sources" %}</option>
+                  {% for facet in filter_sources %}
+                    <option value="{{ facet.source__id }}"
+                            {% if applied_filters.source == facet.source__id|stringformat:"s" %}selected{% endif %}>
+                      {{ facet.source__name }} ({{ facet.count }})
+                    </option>
+                  {% endfor %}
+                {% endif %}
+              </select>
+            </div>
+          {% endif %}
+        {% endif %}
+        <!-- Sentiment Filter (common) -->
+        {% if show_sentiment %}
+          <div>
+            <label class="form-label">{% trans "Sentiment" %}</label>
+            <select name="sentiment" class="form-input" onchange="this.form.submit()">
+              <option value="">{% trans "All sentiments" %}</option>
+              <option value="positive"
+                      {% if request.GET.sentiment == 'positive' or applied_filters.sentiment == 'positive' %}selected{% endif %}>
+                😊 {% trans "Positive" %}
+              </option>
+              <option value="neutral"
+                      {% if request.GET.sentiment == 'neutral' or applied_filters.sentiment == 'neutral' %}selected{% endif %}>
+                😐 {% trans "Neutral" %}
+              </option>
+              <option value="negative"
+                      {% if request.GET.sentiment == 'negative' or applied_filters.sentiment == 'negative' %}selected{% endif %}>
+                😞 {% trans "Negative" %}
+              </option>
+            </select>
+          </div>
+        {% endif %}
+        <!-- Date Range (for search and category pages) -->
+        {% if page_type == "search" or page_type == "category" %}
+          <div>
+            <label class="form-label">{% trans "Date range" %}</label>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="date"
+                     name="date_from"
+                     value="{{ applied_filters.date_from }}"
+                     class="form-input text-sm"
+                     placeholder="{% trans 'From' %}"
+                     {% if page_type == "category" %}onchange="this.form.submit()"{% endif %} />
+              <input type="date"
+                     name="date_to"
+                     value="{{ applied_filters.date_to }}"
+                     class="form-input text-sm"
+                     placeholder="{% trans 'To' %}"
+                     {% if page_type == "category" %}onchange="this.form.submit()"{% endif %} />
+            </div>
+          </div>
+        {% endif %}
+        <!-- Search-specific filters -->
+        {% if page_type == "search" %}
+          <!-- Search Query -->
+          <div>
+            <label class="form-label">{% trans "Search terms" %}</label>
+            <input type="search"
+                   name="q"
+                   value="{{ query }}"
+                   class="form-input"
+                   placeholder="{% trans 'Enter search terms...' %}" />
+          </div>
+          <!-- Search Type -->
+          <div>
+            <label class="form-label">{% trans "Search type" %}</label>
+            <select name="search_type" class="form-input">
+              <option value="phrase" {% if search_type == 'phrase' %}selected{% endif %}>{% trans "Exact phrase" %}</option>
+              <option value="plain" {% if search_type == 'plain' %}selected{% endif %}>{% trans "All words" %}</option>
+              <option value="web" {% if search_type == 'web' %}selected{% endif %}>{% trans "Web search" %}</option>
+            </select>
+          </div>
+        {% endif %}
+        <!-- Submit Button for search -->
+        {% if page_type == "search" %}
+          <button type="submit" class="btn btn-primary w-full">
+            <svg class="w-4 h-4 mr-2"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+              </path>
+            </svg>
+            {% trans "Search" %}
+          </button>
+        {% endif %}
+        <!-- Clear Filters Button (always available when filters are present) -->
+        <div class="pt-2">
+          {% if page_type == "for-you" %}
+            <a href="{% url 'news:for-you' %}"
+               class="btn btn-sm btn-secondary w-full text-center">
+              <svg class="w-4 h-4 mr-2"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              {% trans "Clear Filters" %}
+            </a>
+          {% elif page_type == "search" %}
+            <a href="{% url 'news:search' %}" class="btn btn-secondary w-full">
+              <svg class="w-4 h-4 mr-2"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              {% trans "Clear all filters" %}
+            </a>
+          {% elif page_type == "category" %}
+            <a href="{% url 'news:category' current_category %}"
+               class="btn btn-secondary w-full">
+              <svg class="w-4 h-4 mr-2"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              {% trans "Clear filters" %}
+            </a>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+{% endif %}

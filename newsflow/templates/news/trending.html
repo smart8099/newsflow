@@ -1,0 +1,220 @@
+{% extends "news/base_news.html" %}
+
+{% load i18n humanize %}
+
+{% block news_title %}
+  {% trans "Trending News" %} - NewsFlow
+{% endblock news_title %}
+{% block news_content %}
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Trending Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+          <span class="mr-3">🔥</span>
+          {% trans "Trending Now" %}
+        </h1>
+        <div class="text-sm text-gray-500 dark:text-slate-400">{% trans "Last 24 hours" %}</div>
+      </div>
+      <p class="text-gray-600 dark:text-slate-400 mb-6">
+        {% trans "Discover the most popular and engaging news stories based on reader interactions and engagement." %}
+      </p>
+    </div>
+    <!-- Trending Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="card">
+        <div class="card-body">
+          <div class="flex items-center">
+            <div class="p-3 rounded-lg bg-red-100 dark:bg-red-900 mr-4">
+              <span class="text-2xl">👁️</span>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_views|intcomma }}</p>
+              <p class="text-sm text-gray-600 dark:text-slate-400">{% trans "Total Views Today" %}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="flex items-center">
+            <div class="p-3 rounded-lg bg-blue-100 dark:bg-blue-900 mr-4">
+              <span class="text-2xl">📰</span>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ trending_articles.count }}</p>
+              <p class="text-sm text-gray-600 dark:text-slate-400">{% trans "Trending Articles" %}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="flex items-center">
+            <div class="p-3 rounded-lg bg-green-100 dark:bg-green-900 mr-4">
+              <span class="text-2xl">📈</span>
+            </div>
+            <div>
+              <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ growth_percentage|floatformat:1 }}%</p>
+              <p class="text-sm text-gray-600 dark:text-slate-400">{% trans "Growth vs Yesterday" %}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <!-- Main Trending Articles -->
+      <div class="lg:col-span-3">
+        {% if trending_articles %}
+          <!-- Top Trending Article -->
+          {% with trending_articles.0 as featured_article %}
+            <div class="card mb-8 bg-gradient-to-r from-primary-50 to-blue-50 dark:from-primary-900 dark:to-blue-900 border-primary-200 dark:border-primary-700">
+              <div class="card-body">
+                <div class="flex items-center mb-4">
+                  <span class="badge bg-red-500 text-white mr-2">🔥 #1 {% trans "Trending" %}</span>
+                  <span class="text-sm text-gray-600 dark:text-slate-400">
+                    {{ featured_article.view_count|intcomma }} {% trans "views" %}
+                  </span>
+                </div>
+                <a href="{{ featured_article.url }}"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   onclick="trackArticleClick({{ featured_article.id }})"
+                   class="block group">
+                  <h2 class="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors mb-4">
+                    {{ featured_article.title }}
+                  </h2>
+                  {% if featured_article.summary %}
+                    <p class="text-gray-700 dark:text-slate-300 mb-4 leading-relaxed">{{ featured_article.summary|truncatewords:40 }}</p>
+                  {% endif %}
+                  <div class="flex flex-wrap items-center gap-4 text-sm">
+                    <span class="flex items-center text-gray-600 dark:text-slate-400">
+                      <span class="mr-1">🌐</span>
+                      {{ featured_article.source.name }}
+                    </span>
+                    <span class="flex items-center text-gray-600 dark:text-slate-400">
+                      <span class="mr-1">⏰</span>
+                      {{ featured_article.published_at|timesince }} {% trans "ago" %}
+                    </span>
+                    {% if featured_article.sentiment %}
+                      <span class="flex items-center">
+                        {% if featured_article.sentiment == 'positive' %}
+                          <span class="badge bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">😊 {% trans "Positive" %}</span>
+                        {% elif featured_article.sentiment == 'negative' %}
+                          <span class="badge bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">😞 {% trans "Negative" %}</span>
+                        {% else %}
+                          <span class="badge bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300">😐 {% trans "Neutral" %}</span>
+                        {% endif %}
+                      </span>
+                    {% endif %}
+                    {% if featured_article.reading_time %}
+                      <span class="flex items-center text-gray-600 dark:text-slate-400">
+                        <span class="mr-1">📖</span>
+                        {{ featured_article.reading_time }} {% trans "min read" %}
+                      </span>
+                    {% endif %}
+                  </div>
+                </a>
+              </div>
+            </div>
+          {% endwith %}
+          <!-- Other Trending Articles -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for article in trending_articles|slice:"1:7" %}
+              {% include 'news/partials/news_card_secondary.html' %}
+            {% endfor %}
+          </div>
+          <!-- HTMX Infinite Scroll Container -->
+          <div id="articles-container" class="mt-8">
+            <!-- Additional articles will be loaded here -->
+          </div>
+          <!-- HTMX Load More Trigger -->
+          <div class="text-center pt-8"
+               hx-get="{% url 'news:load-more' %}?page=2&type=trending{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}{% if request.GET.sentiment %}&sentiment={{ request.GET.sentiment }}{% endif %}{% if request.GET.source %}&source={{ request.GET.source }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}"
+               hx-target="#articles-container"
+               hx-swap="beforeend"
+               hx-trigger="revealed"
+               hx-indicator="#loading-indicator">
+            <div class="flex items-center justify-center">
+              <div class="spinner w-6 h-6 mr-3"></div>
+              <span class="text-gray-600 dark:text-slate-400">{% trans "Loading more trending..." %}</span>
+            </div>
+          </div>
+        {% else %}
+          <!-- No Trending Articles -->
+          <div class="text-center py-16">
+            <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-gray-100 dark:bg-slate-700 mb-6">
+              <span class="text-2xl">📈</span>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">{% trans "No Trending Articles" %}</h3>
+            <p class="text-gray-600 dark:text-slate-400 mb-6">{% trans "Check back later for trending content." %}</p>
+            <a href="{% url 'news:home' %}" class="btn btn-primary">{% trans "Browse All News" %}</a>
+          </div>
+        {% endif %}
+      </div>
+      <!-- Trending Sidebar -->
+      <div class="lg:col-span-1">
+        <!-- Trending Categories -->
+        <div class="card mb-6">
+          <div class="card-header">
+            <h3 class="font-semibold text-gray-900 dark:text-white">{% trans "Trending Categories" %}</h3>
+          </div>
+          <div class="card-body p-0">
+            {% for category_data in trending_categories %}
+              <div class="border-b border-gray-200 dark:border-slate-700 last:border-b-0">
+                <a href="{% url 'news:category' category_data.category %}"
+                   class="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                  <div>
+                    <span class="font-medium text-gray-900 dark:text-white capitalize">{{ category_data.category }}</span>
+                    <div class="text-xs text-gray-500 dark:text-slate-400">
+                      {{ category_data.view_count|intcomma }} {% trans "views" %}
+                    </div>
+                  </div>
+                  <span class="text-xl">
+                    {% if category_data.category == 'technology' %}
+                      💻
+                    {% elif category_data.category == 'business' %}
+                      💼
+                    {% elif category_data.category == 'politics' %}
+                      🏛️
+                    {% elif category_data.category == 'sports' %}
+                      ⚽
+                    {% elif category_data.category == 'entertainment' %}
+                      🎬
+                    {% elif category_data.category == 'health' %}
+                      🏥
+                    {% elif category_data.category == 'science' %}
+                      🔬
+                    {% elif category_data.category == 'world' %}
+                      🌍
+                    {% else %}
+                      📰
+                    {% endif %}
+                  </span>
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        <!-- Trending Search Terms -->
+        {% if trending_searches %}
+          <div class="card">
+            <div class="card-header">
+              <h3 class="font-semibold text-gray-900 dark:text-white">🔍 {% trans "Trending Searches" %}</h3>
+            </div>
+            <div class="card-body">
+              <div class="flex flex-wrap gap-2">
+                {% for search_term in trending_searches %}
+                  <a href="{% url 'news:search' %}?q={{ search_term.query|urlencode }}"
+                     class="px-3 py-1 bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-300 rounded-full text-sm hover:bg-primary-200 dark:hover:bg-primary-800 transition-colors">
+                    {{ search_term.query }}
+                  </a>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock news_content %}

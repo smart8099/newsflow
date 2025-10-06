@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block email_title %}{{ site_name }}{% endblock %}
+    </title>
+    <style>
+      /* Email-safe CSS */
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f8fafc;
+        line-height: 1.6;
+      }
+
+      .email-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+      }
+
+      .email-header {
+        background: linear-gradient(135deg, #4994e8 0%, #3479dc 100%);
+        padding: 40px 20px;
+        text-align: center;
+      }
+
+      .logo {
+        color: #ffffff;
+        font-size: 28px;
+        font-weight: bold;
+        margin: 0;
+        text-decoration: none;
+      }
+
+      .email-content {
+        padding: 40px 20px;
+      }
+
+      .email-title {
+        color: #1e293b;
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 20px 0;
+      }
+
+      .email-text {
+        color: #475569;
+        font-size: 16px;
+        line-height: 1.6;
+        margin: 0 0 20px 0;
+      }
+
+      .email-button {
+        display: inline-block;
+        background: linear-gradient(135deg, #4994e8 0%, #3479dc 100%);
+        color: #ffffff;
+        text-decoration: none;
+        padding: 16px 32px;
+        border-radius: 8px;
+        font-weight: 600;
+        margin: 20px 0;
+        text-align: center;
+      }
+
+      .email-button:hover {
+        background: linear-gradient(135deg, #3479dc 0%, #2c66ca 100%);
+      }
+
+      .feature-box {
+        background-color: #f8fafc;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        border-left: 4px solid #4994e8;
+      }
+
+      .feature-box h3 {
+        color: #1e293b;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 10px 0;
+      }
+
+      .feature-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .feature-list li {
+        color: #475569;
+        font-size: 14px;
+        margin: 8px 0;
+        padding-left: 20px;
+        position: relative;
+      }
+
+      .feature-list li:before {
+        content: "✓";
+        color: #4994e8;
+        font-weight: bold;
+        position: absolute;
+        left: 0;
+      }
+
+      .email-footer {
+        padding: 20px;
+        text-align: center;
+        color: #64748b;
+        font-size: 14px;
+        border-top: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+      }
+
+      .footer-links {
+        margin: 10px 0;
+      }
+
+      .footer-links a {
+        color: #4994e8;
+        text-decoration: none;
+        margin: 0 10px;
+      }
+
+      .social-links {
+        margin: 15px 0;
+      }
+
+      .social-links a {
+        display: inline-block;
+        margin: 0 5px;
+        color: #64748b;
+        text-decoration: none;
+      }
+
+      /* Mobile responsive */
+      @media only screen and (max-width: 600px) {
+        .email-content {
+          padding: 20px 15px;
+        }
+
+        .email-title {
+          font-size: 20px;
+        }
+
+        .email-button {
+          display: block;
+          margin: 20px 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <!-- Header -->
+      <div class="email-header">
+        <h1 class="logo">
+          <span style="color: #ffffff;">News</span><span style="color: #e2e8f0;">flow</span>
+        </h1>
+      </div>
+      <!-- Content -->
+      <div class="email-content">
+        {% block email_content %}<!-- Default content goes here -->{% endblock %}
+      </div>
+      <!-- Footer -->
+      <div class="email-footer">
+        {% block email_footer %}
+          <p>© {{ current_year|default:"2025" }} {{ site_name|default:"Newsflow" }}. All rights reserved.</p>
+          <div class="footer-links">
+            <a href="{{ frontend_url }}">Home</a>
+            <a href="{{ frontend_url }}/about">About</a>
+            <a href="{{ frontend_url }}/privacy">Privacy Policy</a>
+            <a href="{{ frontend_url }}/terms">Terms of Service</a>
+          </div>
+          <div class="social-links">
+            <a href="#" title="Follow us on Twitter">Twitter</a>
+            <a href="#" title="Like us on Facebook">Facebook</a>
+            <a href="#" title="Connect on LinkedIn">LinkedIn</a>
+          </div>
+          <p style="margin-top: 20px; font-size: 12px; color: #94a3b8;">
+            You received this email because you have an account with {{ site_name }}.
+            <br />
+            If you didn't request this email, you can safely ignore it.
+          </p>
+        {% endblock %}
+      </div>
+    </div>
+  </body>
+</html>

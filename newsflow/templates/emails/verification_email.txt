@@ -1,0 +1,24 @@
+{% load i18n %}{{ site_name }} - {% trans "Verify your email address" %}
+
+{% trans "Welcome to Newsflow" %}, {{ user.name|default:user.email }}!
+
+{% blocktrans %}Thank you for signing up for Newsflow, your AI-powered news aggregation platform.
+
+To complete your registration and start getting personalized news from 100+ global sources, please verify your email address by clicking the link below:{% endblocktrans %}
+
+{{ verification_url }}
+
+{% trans "What's waiting for you:" %}
+- {% trans "Personalized news recommendations powered by AI" %}
+- {% trans "Access to 100+ global news sources" %}
+- {% trans "Clean, distraction-free reading experience" %}
+- {% trans "Mobile-optimized interface" %}
+- {% trans "Real-time news updates" %}
+
+{% blocktrans %}If you didn't create an account with {{ site_name }}, you can safely ignore this email.
+This verification link will expire in 24 hours for security reasons.{% endblocktrans %}
+
+---
+© {{ current_year|default:"2025" }} {{ site_name|default:"Newsflow" }}. All rights reserved.
+
+{{ frontend_url }}

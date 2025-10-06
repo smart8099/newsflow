@@ -1,0 +1,31 @@
+{% load i18n %}{{ site_name }} - {% trans "Welcome! Your news journey begins now" %}
+
+🎉 {% trans "Welcome to Newsflow" %}, {{ user.name|default:user.email }}!
+
+{% blocktrans %}Your email has been verified and your account is now active! You're now part of a community that stays informed with AI-powered news curation from 100+ global sources.{% endblocktrans %}
+
+{% trans "Start reading news" %}: {{ login_url }}
+
+{% trans "What you can do now:" %}
+- {% trans "Get personalized news recommendations" %}
+- {% trans "Browse news from 100+ trusted sources" %}
+- {% trans "Save articles for later reading" %}
+- {% trans "Customize your news preferences" %}
+- {% trans "Enjoy ad-free, distraction-free reading" %}
+
+💡 {% trans "Quick Start Tips:" %}
+- {% trans "Visit your dashboard to set up news preferences" %}
+- {% trans "Follow topics and sources you're interested in" %}
+- {% trans "Check out the trending news section" %}
+- {% trans "Try our AI-powered news summaries" %}
+
+{% blocktrans %}We're excited to help you stay informed with the latest news from around the world.
+If you have any questions or need assistance, our support team is here to help.{% endblocktrans %}
+
+{% trans "Happy reading!" %}
+{% trans "The Newsflow Team" %}
+
+---
+© {{ current_year|default:"2025" }} {{ site_name|default:"Newsflow" }}. All rights reserved.
+
+{{ frontend_url }}

@@ -1,0 +1,48 @@
+{% extends "emails/base_email.html" %}
+
+{% load i18n %}
+
+{% block email_title %}
+  {% trans "Verify your email address" %} - {{ site_name }}
+{% endblock %}
+{% block email_content %}
+  <h2 class="email-title">{% trans "Welcome to Newsflow" %}, {{ user.name|default:user.email }}!</h2>
+  <p class="email-text">
+    {% blocktrans %}
+        Thank you for signing up for Newsflow, your AI-powered news aggregation platform.
+        To complete your registration and start getting personalized news from 100+ global sources,
+        please verify your email address.
+        {% endblocktrans %}
+  </p>
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="{{ verification_url }}" class="email-button">{% trans "Verify Email Address" %}</a>
+  </div>
+  <div class="feature-box">
+    <h3>{% trans "What's waiting for you:" %}</h3>
+    <ul class="feature-list">
+      <li>{% trans "Personalized news recommendations powered by AI" %}</li>
+      <li>{% trans "Access to 100+ global news sources" %}</li>
+      <li>{% trans "Clean, distraction-free reading experience" %}</li>
+      <li>{% trans "Mobile-optimized interface" %}</li>
+      <li>{% trans "Real-time news updates" %}</li>
+    </ul>
+  </div>
+  <p class="email-text">
+    {% trans "If the button doesn't work, you can copy and paste this link into your browser:" %}
+    <br />
+    <a href="{{ verification_url }}"
+       style="color: #4994e8;
+              word-break: break-all">{{ verification_url }}</a>
+  </p>
+  <p class="email-text"
+     style="margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 14px;
+            color: #64748b">
+    {% blocktrans %}
+        If you didn't create an account with {{ site_name }}, you can safely ignore this email.
+        This verification link will expire in 24 hours for security reasons.
+        {% endblocktrans %}
+  </p>
+{% endblock %}

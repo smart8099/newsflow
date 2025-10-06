@@ -1,0 +1,288 @@
+{% extends "admin/dashboard/base_admin.html" %}
+
+{% load i18n humanize %}
+
+{% block page_title %}
+  {% trans "Search Analytics" %}
+{% endblock page_title %}
+{% block page_description %}
+  {% trans "Search behavior and performance analytics" %}
+{% endblock page_description %}
+{% block admin_content %}
+  <!-- Search Metrics -->
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+    <div class="admin-metric-card">
+      <div class="admin-metric-value">{{ total_searches|intcomma }}</div>
+      <div class="admin-metric-label">{% trans "Total Searches" %}</div>
+    </div>
+    <div class="admin-metric-card">
+      <div class="admin-metric-value">{{ searches_24h|intcomma }}</div>
+      <div class="admin-metric-label">{% trans "Last 24h" %}</div>
+    </div>
+    <div class="admin-metric-card">
+      <div class="admin-metric-value">{{ successful_searches|intcomma }}</div>
+      <div class="admin-metric-label">{% trans "Successful" %}</div>
+    </div>
+    <div class="admin-metric-card">
+      <div class="admin-metric-value">{{ success_rate|floatformat:1 }}%</div>
+      <div class="admin-metric-label">{% trans "Success Rate" %}</div>
+    </div>
+    <div class="admin-metric-card">
+      <div class="admin-metric-value">{{ avg_results|floatformat:1 }}</div>
+      <div class="admin-metric-label">{% trans "Avg Results" %}</div>
+    </div>
+  </div>
+  <!-- Popular Queries -->
+  <div class="admin-chart-container mb-8">
+    <h3 class="admin-chart-title">{% trans "Popular Search Queries (Last 7 Days)" %}</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {% for query in popular_queries %}
+        <div class="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600">
+          <div class="text-sm font-medium text-gray-900 dark:text-white">"{{ query.normalized_query }}"</div>
+          <div class="text-xs text-gray-600 dark:text-slate-400 mt-1">
+            {{ query.search_count }} searches • {{ query.avg_results|floatformat:0 }} avg results
+          </div>
+        </div>
+      {% empty %}
+        <div class="col-span-3 text-center py-4 text-gray-500 dark:text-slate-400">
+          {% trans "No popular queries found" %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  <!-- Filters and Search -->
+  <div class="admin-chart-container mb-6">
+    <h3 class="admin-chart-title">{% trans "Filter Search Analytics" %}</h3>
+    <form method="get"
+          class="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-5 lg:gap-4 lg:items-end">
+      <!-- Search Type Filter -->
+      <div class="lg:col-span-1">
+        <label for="search_type"
+               class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+          {% trans "Search Type" %}
+        </label>
+        <select name="search_type" id="search_type" class="admin-form-select w-full">
+          {% for value, label in search_type_choices %}
+            <option value="{{ value }}"
+                    {% if value == current_search_type %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <!-- User Filter -->
+      <div class="lg:col-span-1">
+        <label for="user_filter"
+               class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+          {% trans "User Type" %}
+        </label>
+        <select name="user_filter" id="user_filter" class="admin-form-select w-full">
+          {% for value, label in user_filter_choices %}
+            <option value="{{ value }}"
+                    {% if value == current_user_filter %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <!-- Date Filter -->
+      <div class="lg:col-span-1">
+        <label for="date_filter"
+               class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+          {% trans "Date Range" %}
+        </label>
+        <select name="date_filter" id="date_filter" class="admin-form-select w-full">
+          {% for value, label in date_filter_choices %}
+            <option value="{{ value }}"
+                    {% if value == current_date_filter %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <!-- Query Search -->
+      <div class="lg:col-span-1">
+        <label for="query_search"
+               class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">
+          {% trans "Search Query" %}
+        </label>
+        <input type="text"
+               name="query_search"
+               id="query_search"
+               value="{{ current_query_search }}"
+               placeholder="{% trans 'Search within queries...' %}"
+               class="admin-form-select w-full" />
+      </div>
+      <!-- Submit -->
+      <div class="lg:col-span-1 lg:flex lg:justify-end">
+        <button type="submit"
+                class="admin-btn admin-btn-primary w-full lg:w-auto lg:px-6">
+          <svg class="w-4 h-4 mr-2"
+               fill="none"
+               stroke="currentColor"
+               viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+            </path>
+          </svg>
+          {% trans "Filter" %}
+        </button>
+      </div>
+    </form>
+    <!-- Results Summary -->
+    {% if total_filtered != total_searches %}
+      <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <p class="text-sm text-blue-800 dark:text-blue-200">
+          {% blocktrans with count=total_filtered total=total_searches %}
+            Showing {{ count }} of {{ total }} search records
+          {% endblocktrans %}
+          <a href="{% url 'news:admin-search-analytics' %}"
+             class="ml-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline">
+            {% trans "Clear filters" %}
+          </a>
+        </p>
+      </div>
+    {% endif %}
+  </div>
+  <!-- Search Analytics Table -->
+  <div class="admin-chart-container">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="admin-chart-title mb-0">
+        {% trans "Search Records" %}
+        {% if page_obj %}
+          <span class="text-sm font-normal text-gray-500 dark:text-slate-400">
+            ({{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }})
+          </span>
+        {% endif %}
+      </h3>
+    </div>
+    {% if searches %}
+      <div class="overflow-x-auto">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>{% trans "Query" %}</th>
+              <th>{% trans "User" %}</th>
+              <th>{% trans "Type" %}</th>
+              <th>{% trans "Results" %}</th>
+              <th>{% trans "Response Time" %}</th>
+              <th>{% trans "Date" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for search in searches %}
+              <tr>
+                <td>
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">{{ search.query|truncatechars:50 }}</div>
+                  {% if search.query != search.normalized_query %}
+                    <div class="text-xs text-gray-500 dark:text-slate-400 mt-1">
+                      {% trans "Normalized:" %} {{ search.normalized_query|truncatechars:40 }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if search.user %}
+                    <span class="admin-badge info">{{ search.user.email|truncatechars:20 }}</span>
+                  {% else %}
+                    <span class="admin-badge secondary">{% trans "Anonymous" %}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="admin-badge {% if search.search_type == 'article' %}success{% elif search.search_type == 'autocomplete' %}info{% else %}warning{% endif %}">
+                    {{ search.get_search_type_display }}
+                  </span>
+                </td>
+                <td>
+                  {% if search.result_count > 0 %}
+                    <span class="admin-badge success">{{ search.result_count|intcomma }}</span>
+                  {% else %}
+                    <span class="admin-badge danger">0</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if search.response_time_ms %}
+                    <span class="admin-badge {% if search.response_time_ms < 100 %}success{% elif search.response_time_ms < 500 %}warning{% else %}danger{% endif %}">
+                      {{ search.response_time_ms }}ms
+                    </span>
+                  {% else %}
+                    <span class="admin-badge secondary">-</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="admin-badge secondary">{{ search.created|date:"M j, Y H:i" }}</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <!-- Pagination -->
+      {% if is_paginated %}
+        <div class="mt-6 flex items-center justify-between border-t border-gray-200 dark:border-slate-700 pt-4">
+          <div class="flex-1 flex justify-between sm:hidden">
+            {% if page_obj.has_previous %}
+              <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}"
+                 class="admin-btn admin-btn-secondary">{% trans "Previous" %}</a>
+            {% endif %}
+            {% if page_obj.has_next %}
+              <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}"
+                 class="admin-btn admin-btn-secondary">{% trans "Next" %}</a>
+            {% endif %}
+          </div>
+          <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+              <p class="text-sm text-gray-700 dark:text-slate-300">
+                {% blocktrans with start=page_obj.start_index end=page_obj.end_index total=page_obj.paginator.count %}
+                  Showing {{ start }} to {{ end }} of {{ total }} search records
+                {% endblocktrans %}
+              </p>
+            </div>
+            <div>
+              <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                {% if page_obj.has_previous %}
+                  <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}"
+                     class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm font-medium text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  </a>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                  {% if page_obj.number == num %}
+                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-slate-600 bg-primary-50 dark:bg-primary-900/20 text-sm font-medium text-primary-600 dark:text-primary-400">
+                      {{ num }}
+                    </span>
+                  {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}"
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700">
+                      {{ num }}
+                    </a>
+                  {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                  <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}"
+                     class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm font-medium text-gray-500 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                  </a>
+                {% endif %}
+              </nav>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400"
+             fill="none"
+             stroke="currentColor"
+             viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z">
+          </path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">{% trans "No search records found" %}</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-slate-400">
+          {% trans "Try adjusting your filters or search terms." %}
+        </p>
+        <div class="mt-6">
+          <a href="{% url 'news:admin-search-analytics' %}"
+             class="admin-btn admin-btn-primary">{% trans "Clear all filters" %}</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+{% endblock admin_content %}

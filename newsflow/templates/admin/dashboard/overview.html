@@ -1,0 +1,294 @@
+{% extends "admin/dashboard/base_admin.html" %}
+
+{% load i18n humanize %}
+
+{% block page_title %}
+  {% trans "Dashboard Overview" %}
+{% endblock page_title %}
+{% block page_description %}
+  {% trans "Key metrics and system overview" %}
+{% endblock page_description %}
+{% block admin_content %}
+  <!-- Key Metrics Row -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Total Articles -->
+    <div class="admin-metric-card">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="admin-metric-icon bg-primary-500">
+            <svg class="w-5 h-5 text-white"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+              </path>
+            </svg>
+          </div>
+        </div>
+        <div class="ml-4">
+          <div class="admin-metric-value">{{ total_articles|intcomma }}</div>
+          <div class="admin-metric-label">{% trans "Total Articles" %}</div>
+          <div class="admin-metric-change positive">+{{ articles_last_24h }} {% trans "today" %}</div>
+        </div>
+      </div>
+    </div>
+    <!-- Active Sources -->
+    <div class="admin-metric-card">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="admin-metric-icon bg-green-500">
+            <svg class="w-5 h-5 text-white"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9">
+              </path>
+            </svg>
+          </div>
+        </div>
+        <div class="ml-4">
+          <div class="admin-metric-value">{{ active_sources|intcomma }}</div>
+          <div class="admin-metric-label">{% trans "Active Sources" %}</div>
+          <div class="text-xs text-gray-600 dark:text-slate-400">{{ total_sources }} {% trans "total" %}</div>
+        </div>
+      </div>
+    </div>
+    <!-- Total Users -->
+    <div class="admin-metric-card">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="admin-metric-icon bg-purple-500">
+            <svg class="w-5 h-5 text-white"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z">
+              </path>
+            </svg>
+          </div>
+        </div>
+        <div class="ml-4">
+          <div class="admin-metric-value">{{ total_users|intcomma }}</div>
+          <div class="admin-metric-label">{% trans "Total Users" %}</div>
+          <div class="admin-metric-change positive">+{{ users_last_24h }} {% trans "today" %}</div>
+        </div>
+      </div>
+    </div>
+    <!-- User Engagement -->
+    <div class="admin-metric-card">
+      <div class="flex items-center">
+        <div class="flex-shrink-0">
+          <div class="admin-metric-icon bg-orange-500">
+            <svg class="w-5 h-5 text-white"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+              </path>
+            </svg>
+          </div>
+        </div>
+        <div class="ml-4">
+          <div class="admin-metric-value">{{ engagement_total|intcomma }}</div>
+          <div class="admin-metric-label">{% trans "Total Engagements" %}</div>
+          <div class="admin-metric-change positive">+{{ interactions_last_24h }} {% trans "today" %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Charts Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Category Distribution -->
+    <div class="admin-chart-container">
+      <h3 class="admin-chart-title">{% trans "Category Distribution" %}</h3>
+      <div class="relative h-64">
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+    <!-- Sentiment Analysis -->
+    <div class="admin-chart-container">
+      <h3 class="admin-chart-title">{% trans "Sentiment Analysis" %}</h3>
+      <div class="relative h-64">
+        <canvas id="sentimentChart"></canvas>
+      </div>
+    </div>
+  </div>
+  <!-- Tables Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Top Articles -->
+    <div class="admin-chart-container">
+      <h3 class="admin-chart-title">{% trans "Top Performing Articles" %}</h3>
+      <div class="overflow-x-auto">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>{% trans "Article" %}</th>
+              <th>{% trans "Views" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for article in top_articles|slice:":5" %}
+              <tr>
+                <td>
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">{{ article.title|truncatechars:50 }}</div>
+                  <div class="text-sm text-gray-500 dark:text-slate-400">{{ article.source.name }}</div>
+                </td>
+                <td>
+                  <span class="admin-badge info">{{ article.view_count|intcomma }}</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Recent Searches -->
+    <div class="admin-chart-container">
+      <h3 class="admin-chart-title">{% trans "Recent Searches" %}</h3>
+      <div class="overflow-x-auto">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>{% trans "Query" %}</th>
+              <th>{% trans "Results" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for search in recent_searches|slice:":5" %}
+              <tr>
+                <td>
+                  <div class="text-sm font-medium text-gray-900 dark:text-white">{{ search.query|truncatechars:30 }}</div>
+                  <div class="text-sm text-gray-500 dark:text-slate-400">{{ search.created|timesince }} ago</div>
+                </td>
+                <td>
+                  <span class="admin-badge success">{{ search.result_count|intcomma }}</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock admin_content %}
+{% block admin_javascript %}
+  <script>
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Primary color palette matching main site theme
+      const primaryColors = [
+        '#4994e8', // primary-500
+        '#3479dc', // primary-600
+        '#2161c7', // primary-700
+        '#10B981', // green-500
+        '#F59E0B', // yellow-500
+        '#EF4444', // red-500
+        '#8B5CF6', // purple-500
+        '#06B6D4' // cyan-500
+      ];
+
+      const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 20,
+              usePointStyle: true,
+              font: {
+                size: 12,
+                family: "'Inter', sans-serif"
+              }
+            }
+          }
+        }
+      };
+
+      // Category Distribution Chart
+      const categoryCtx = document.getElementById('categoryChart');
+      if (categoryCtx) {
+        const categoryData = [{
+          %
+          for stat in category_stats %
+        } {
+          label: '{{ stat.source__primary_category|capfirst }}',
+          count: {
+            {
+              stat.count
+            }
+          }
+        } {
+          %
+          if not forloop.last %
+        }, {
+          %
+          endif %
+        } {
+          %
+          endfor %
+        }];
+
+        new Chart(categoryCtx, {
+          type: 'doughnut',
+          data: {
+            labels: categoryData.map(item => item.label),
+            datasets: [{
+              data: categoryData.map(item => item.count),
+              backgroundColor: primaryColors,
+              borderWidth: 2,
+              borderColor: '#ffffff',
+              hoverBorderWidth: 3,
+              hoverBorderColor: '#ffffff'
+            }]
+          },
+          options: {
+            ...chartOptions,
+            cutout: '60%'
+          }
+        });
+      }
+
+      // Sentiment Analysis Chart
+      const sentimentCtx = document.getElementById('sentimentChart');
+      if (sentimentCtx) {
+        const sentimentData = [{
+          %
+          for stat in sentiment_stats %
+        } {
+          label: '{{ stat.sentiment_label|capfirst }}',
+          count: {
+            {
+              stat.count
+            }
+          }
+        } {
+          %
+          if not forloop.last %
+        }, {
+          %
+          endif %
+        } {
+          %
+          endfor %
+        }];
+
+        new Chart(sentimentCtx, {
+          type: 'pie',
+          data: {
+            labels: sentimentData.map(item => item.label),
+            datasets: [{
+              data: sentimentData.map(item => item.count),
+              backgroundColor: ['#10B981', '#EF4444', '#6B7280'],
+              borderWidth: 2,
+              borderColor: '#ffffff',
+              hoverBorderWidth: 3,
+              hoverBorderColor: '#ffffff'
+            }]
+          },
+          options: chartOptions
+        });
+      }
+    });
+  </script>
+{% endblock admin_javascript %}

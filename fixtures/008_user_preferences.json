@@ -1,0 +1,138 @@
+[
+  {
+    "model": "users.userprofile_preferred_categories",
+    "pk": 1,
+    "fields": {
+      "userprofile": 1,
+      "category": 1
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_categories",
+    "pk": 2,
+    "fields": {
+      "userprofile": 1,
+      "category": 7
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_categories",
+    "pk": 3,
+    "fields": {
+      "userprofile": 2,
+      "category": 2
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_categories",
+    "pk": 4,
+    "fields": {
+      "userprofile": 2,
+      "category": 3
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_categories",
+    "pk": 5,
+    "fields": {
+      "userprofile": 3,
+      "category": 10
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_categories",
+    "pk": 6,
+    "fields": {
+      "userprofile": 3,
+      "category": 7
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_categories",
+    "pk": 7,
+    "fields": {
+      "userprofile": 4,
+      "category": 6
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_categories",
+    "pk": 8,
+    "fields": {
+      "userprofile": 4,
+      "category": 4
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_categories",
+    "pk": 9,
+    "fields": {
+      "userprofile": 5,
+      "category": 1
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_sources",
+    "pk": 1,
+    "fields": {
+      "userprofile": 1,
+      "newssource": 1
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_sources",
+    "pk": 2,
+    "fields": {
+      "userprofile": 1,
+      "newssource": 5
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_sources",
+    "pk": 3,
+    "fields": {
+      "userprofile": 2,
+      "newssource": 4
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_sources",
+    "pk": 4,
+    "fields": {
+      "userprofile": 2,
+      "newssource": 7
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_sources",
+    "pk": 5,
+    "fields": {
+      "userprofile": 3,
+      "newssource": 2
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_sources",
+    "pk": 6,
+    "fields": {
+      "userprofile": 3,
+      "newssource": 8
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_sources",
+    "pk": 7,
+    "fields": {
+      "userprofile": 4,
+      "newssource": 10
+    }
+  },
+  {
+    "model": "users.userprofile_preferred_sources",
+    "pk": 8,
+    "fields": {
+      "userprofile": 4,
+      "newssource": 6
+    }
+  }
+]

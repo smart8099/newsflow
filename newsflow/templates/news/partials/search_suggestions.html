@@ -1,0 +1,43 @@
+{% load i18n %}
+
+<!-- Search Suggestions Dropdown -->
+{% if suggestions %}
+  <div class="py-2">
+    {% for suggestion in suggestions %}
+      <a href="{% url 'news:search' %}?q={{ suggestion.text|urlencode }}"
+         class="block px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+        <div class="flex items-center space-x-2">
+          <!-- Suggestion Type Icon -->
+          <span class="text-gray-400 dark:text-slate-500">
+            {% if suggestion.type == 'title' %}
+              📄
+            {% elif suggestion.type == 'category' %}
+              📁
+            {% elif suggestion.type == 'source' %}
+              🌐
+            {% else %}
+              🔍
+            {% endif %}
+          </span>
+          <!-- Suggestion Text -->
+          <span class="flex-1">{{ suggestion.text }}</span>
+          <!-- Suggestion Type Label -->
+          <span class="text-xs text-gray-400 dark:text-slate-500 capitalize">{{ suggestion.type }}</span>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+  <!-- Search Tips -->
+  <div class="border-t border-gray-200 dark:border-slate-700 pt-2 pb-1">
+    <div class="px-4 py-1 text-xs text-gray-500 dark:text-slate-400">
+      💡 {% trans "Press Enter to search or click a suggestion" %}
+    </div>
+  </div>
+{% else %}
+  <!-- No suggestions found -->
+  <div class="py-4 px-4 text-sm text-gray-500 dark:text-slate-400 text-center">
+    <div class="mb-2">🔍</div>
+    <div>{% trans "No suggestions found" %}</div>
+    <div class="text-xs mt-1">{% trans "Press Enter to search anyway" %}</div>
+  </div>
+{% endif %}

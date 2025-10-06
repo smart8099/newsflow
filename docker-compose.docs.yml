@@ -1,0 +1,17 @@
+services:
+  docs:
+    image: newsflow_local_docs
+    container_name: newsflow_local_docs
+    build:
+      context: .
+      dockerfile: ./compose/local/docs/Dockerfile
+    env_file:
+      - ./.envs/.local/.django
+    volumes:
+      - /app/.venv
+      - ./docs:/docs:z
+      - ./config:/app/config:z
+      - ./newsflow:/app/newsflow:z
+    ports:
+      - '9000:9000'
+    command: /start-docs

@@ -1,0 +1,289 @@
+{% load i18n %}
+
+<!-- Onboarding Modal -->
+<div id="onboarding-modal"
+     class="hidden fixed inset-0 z-50 overflow-y-auto"
+     aria-labelledby="modal-title"
+     role="dialog"
+     aria-modal="true">
+  <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+         aria-hidden="true"></div>
+    <!-- Modal Content -->
+    <div class="relative inline-block align-bottom bg-white dark:bg-slate-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl sm:w-full sm:p-6">
+      <div>
+        <!-- Header -->
+        <div class="text-center mb-8">
+          <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-primary-100 dark:bg-primary-900/20 mb-4">
+            <svg class="h-8 w-8 text-primary-600 dark:text-primary-400"
+                 fill="none"
+                 stroke="currentColor"
+                 viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+              </path>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2"
+              id="modal-title">{% trans "Choose Your Interests" %}</h3>
+          <p class="text-gray-600 dark:text-slate-400">
+            {% trans "Select topics and sources you're interested in to get personalized recommendations" %}
+          </p>
+        </div>
+        <!-- Form -->
+        <form id="preferences-form" onsubmit="savePreferences(event)">
+          {% csrf_token %}
+          <!-- Categories Section -->
+          <div class="mb-8">
+            <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+              <svg class="w-5 h-5 mr-2 text-primary-600"
+                   fill="none"
+                   stroke="currentColor"
+                   viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                </path>
+              </svg>
+              {% trans "Topics" %}
+            </h4>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {% if available_categories %}
+                {% for category_code, category_name in available_categories %}
+                  <label class="category-item relative flex items-center p-4 border-2 border-gray-200 dark:border-slate-600 rounded-lg cursor-pointer hover:border-primary-300 dark:hover:border-primary-500 transition-colors">
+                    <input type="checkbox"
+                           name="categories"
+                           value="{{ category_code }}"
+                           class="sr-only category-checkbox" />
+                    <div class="flex items-center w-full">
+                      <span class="text-2xl mr-3">
+                        {% if category_name == 'Technology' %}
+                          💻
+                        {% elif category_name == 'Business' %}
+                          💼
+                        {% elif category_name == 'Politics' %}
+                          🏛️
+                        {% elif category_name == 'Sports' %}
+                          ⚽
+                        {% elif category_name == 'Entertainment' %}
+                          🎬
+                        {% elif category_name == 'Health' %}
+                          🏥
+                        {% elif category_name == 'Science' %}
+                          🔬
+                        {% elif category_name == 'World' %}
+                          🌍
+                        {% else %}
+                          📄
+                        {% endif %}
+                      </span>
+                      <span class="font-medium text-gray-900 dark:text-white">{{ category_name }}</span>
+                    </div>
+                    <div class="absolute top-2 right-2 hidden checked-indicator">
+                      <svg class="w-5 h-5 text-primary-600"
+                           fill="currentColor"
+                           viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd">
+                        </path>
+                      </svg>
+                    </div>
+                  </label>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+          <!-- Sources Section -->
+          <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                <svg class="w-5 h-5 mr-2 text-primary-600"
+                     fill="none"
+                     stroke="currentColor"
+                     viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z">
+                  </path>
+                </svg>
+                {% trans "Preferred News Sources" %} <span class="text-sm font-normal text-gray-500 ml-2">({% trans "Optional" %})</span>
+              </h4>
+              <button type="button"
+                      id="select-all-sources-btn"
+                      onclick="toggleAllSources()"
+                      class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">
+                {% trans "Select All" %}
+              </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
+              {% if popular_sources %}
+                {% for source in popular_sources %}
+                  <label class="source-item relative flex items-center p-3 border border-gray-200 dark:border-slate-600 rounded-lg cursor-pointer hover:border-primary-300 dark:hover:border-primary-500 transition-colors">
+                    <input type="checkbox"
+                           name="sources"
+                           value="{{ source.id }}"
+                           class="sr-only source-checkbox" />
+                    <div class="flex items-center justify-between w-full">
+                      <div>
+                        <span class="font-medium text-gray-900 dark:text-white">{{ source.name }}</span>
+                        <div class="text-xs text-gray-500 dark:text-slate-400">
+                          {{ source.get_primary_category_display }} • ⭐ {{ source.credibility_score|floatformat:1 }}
+                        </div>
+                      </div>
+                      <div class="hidden checked-indicator">
+                        <svg class="w-4 h-4 text-primary-600"
+                             fill="currentColor"
+                             viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd">
+                          </path>
+                        </svg>
+                      </div>
+                    </div>
+                  </label>
+                {% endfor %}
+              {% endif %}
+            </div>
+          </div>
+          <!-- Action Buttons -->
+          <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+            <button type="button"
+                    onclick="closeOnboardingModal()"
+                    class="btn btn-secondary w-full sm:w-auto">{% trans "Skip for Now" %}</button>
+            <button type="submit"
+                    class="btn btn-primary w-full sm:w-auto"
+                    id="save-preferences-btn">{% trans "Save Preferences" %}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  // Onboarding Modal Functions
+  function showOnboardingModal() {
+    document.getElementById('onboarding-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeOnboardingModal() {
+    document.getElementById('onboarding-modal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  }
+
+  // Handle checkbox styling
+  document.addEventListener('DOMContentLoaded', function() {
+    // Category checkboxes
+    document.querySelectorAll('.category-checkbox').forEach(function(checkbox) {
+      checkbox.addEventListener('change', function() {
+        const item = this.closest('.category-item');
+        const indicator = item.querySelector('.checked-indicator');
+
+        if (this.checked) {
+          item.classList.add('border-primary-500', 'bg-primary-50', 'dark:bg-primary-900/20');
+          item.classList.remove('border-gray-200', 'dark:border-slate-600');
+          indicator.classList.remove('hidden');
+        } else {
+          item.classList.remove('border-primary-500', 'bg-primary-50', 'dark:bg-primary-900/20');
+          item.classList.add('border-gray-200', 'dark:border-slate-600');
+          indicator.classList.add('hidden');
+        }
+      });
+    });
+
+    // Source checkboxes
+    document.querySelectorAll('.source-checkbox').forEach(function(checkbox) {
+      checkbox.addEventListener('change', function() {
+        const item = this.closest('.source-item');
+        const indicator = item.querySelector('.checked-indicator');
+
+        if (this.checked) {
+          item.classList.add('border-primary-500', 'bg-primary-50', 'dark:bg-primary-900/20');
+          item.classList.remove('border-gray-200', 'dark:border-slate-600');
+          indicator.classList.remove('hidden');
+        } else {
+          item.classList.remove('border-primary-500', 'bg-primary-50', 'dark:bg-primary-900/20');
+          item.classList.add('border-gray-200', 'dark:border-slate-600');
+          indicator.classList.add('hidden');
+        }
+      });
+    });
+  });
+
+  // Save preferences function
+  async function savePreferences(event) {
+    event.preventDefault();
+
+    const form = document.getElementById('preferences-form');
+    const formData = new FormData(form);
+    const saveBtn = document.getElementById('save-preferences-btn');
+
+    // Get selected categories and sources
+    const categories = formData.getAll('categories');
+    const sources = formData.getAll('sources');
+
+    // Validate that at least one category is selected
+    if (categories.length === 0) {
+      alert('Please select at least one topic of interest.');
+      return;
+    }
+
+    console.log('Saving preferences:', {
+      categories,
+      sources
+    });
+
+    // Disable button and show loading
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = 'Saving...';
+
+    try {
+      const response = await fetch('{% url "news:save-preferences" %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+          categories: categories,
+          sources: sources
+        })
+      });
+
+      const data = await response.json();
+
+      console.log('Response data:', data);
+      if (data.status === 'success') {
+        closeOnboardingModal();
+        // Reload page to show updated content
+        window.location.reload();
+      } else {
+        console.error('Server error:', data);
+        alert('Error saving preferences: ' + (data.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Fetch error:', error);
+      alert('Network error: ' + error.message + '. Please check your connection and try again.');
+    } finally {
+      // Re-enable button
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '{% trans "Save Preferences" %}';
+    }
+  }
+
+  // Toggle all sources function
+  function toggleAllSources() {
+    const sourceCheckboxes = document.querySelectorAll('.source-checkbox');
+    const selectAllBtn = document.getElementById('select-all-sources-btn');
+    const allSelected = Array.from(sourceCheckboxes).every(checkbox => checkbox.checked);
+
+    sourceCheckboxes.forEach(function(checkbox) {
+      checkbox.checked = !allSelected;
+      // Trigger change event to update UI
+      checkbox.dispatchEvent(new Event('change'));
+    });
+
+    // Update button text
+    selectAllBtn.textContent = allSelected ? '{% trans "Select All" %}' : '{% trans "Deselect All" %}';
+  }
+
+  // Close modal when clicking outside
+  document.getElementById('onboarding-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeOnboardingModal();
+    }
+  });
+</script>

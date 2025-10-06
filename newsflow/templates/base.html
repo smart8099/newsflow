@@ -1,0 +1,346 @@
+{% load static i18n compress nav_helpers %}
+
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}"
+      class="h-full"
+      {% if user_theme_preference == 'dark' %} data-theme="dark"{% elif user_theme_preference == 'light' %} data-theme="light"{% else %} data-theme="system"{% endif %}>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>
+      {% block title %}
+        Newsflow - AI-Powered News Aggregation
+      {% endblock title %}
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description"
+          content="AI-powered personalized news aggregation platform built with Django that intelligently curates content from 100+ global news sources" />
+    <meta name="author" content="Abdul Basit Mohammed" />
+    <link rel="icon" href="{% static 'images/favicons/favicon.ico' %}" />
+    {% block css %}
+      <!-- Tailwind CSS -->
+      {% compress css %}
+        <link href="{% static 'css/output.css' %}" rel="stylesheet" />
+      {% endcompress %}
+    {% endblock css %}
+    <!-- Immediate Theme Detection Script - Runs before body loads -->
+    <script>
+      (function() {
+        function getTheme() {
+          // Check localStorage first for immediate application
+          const stored = localStorage.getItem('newsflow-theme');
+          if (stored && stored !== 'system') return stored;
+
+          // Check user preference from server
+          const userPref = '{{ user_theme_preference|default:"system" }}';
+          if (userPref !== 'system') return userPref;
+
+          // Fall back to system preference
+          return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        const theme = getTheme();
+        const html = document.documentElement;
+
+        // Apply theme immediately before body renders
+        if (theme === 'dark') {
+          html.classList.add('dark');
+        } else {
+          html.classList.remove('dark');
+        }
+
+        // Store computed theme for consistency
+        localStorage.setItem('newsflow-theme', theme);
+      })();
+    </script>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"
+            integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+            crossorigin="anonymous"></script>
+    <!-- Flowbite JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
+    {% block javascript %}
+      <!-- Project specific Javascript -->
+      {% compress js %}
+        <script defer src="{% static 'js/newsflow.js' %}"></script>
+      {% endcompress %}
+    {% endblock javascript %}
+  </head>
+  <body class="min-h-full bg-gray-50 dark:bg-gray-900 {% block bodyclass %}{% endblock bodyclass %}"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+        data-user-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}">
+    {% block body %}
+      <!-- Navigation -->
+      <nav class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-soft">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between h-16">
+            <div class="flex">
+              <div class="flex-shrink-0 flex items-center">
+                <a href="{% url 'news:home' %}" class="text-xl font-bold text-gradient">
+                  <span class="text-primary-600 dark:text-primary-400">News</span><span class="text-primary-800 dark:text-primary-300">flow</span>
+                </a>
+              </div>
+              <div class="hidden sm:ml-8 sm:flex sm:space-x-8">
+                <a href="{% url 'news:home' %}"
+                   class="nav-link {% active_nav 'news:home' %}">
+                  <svg class="w-4 h-4 mr-1"
+                       fill="none"
+                       stroke="currentColor"
+                       viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z">
+                    </path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3a2 2 0 012-2h4a2 2 0 012 2v4M8 7h8">
+                    </path>
+                  </svg>
+                  Home
+                </a>
+                <a href="{% url 'news:for-you' %}"
+                   class="nav-link {% active_nav 'news:for-you' %}">
+                  <svg class="w-4 h-4 mr-1"
+                       fill="none"
+                       stroke="currentColor"
+                       viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                    </path>
+                  </svg>
+                  For You
+                </a>
+                <a href="{% url 'about' %}" class="nav-link {% active_nav 'about' %}">
+                  <svg class="w-4 h-4 mr-1"
+                       fill="none"
+                       stroke="currentColor"
+                       viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                    </path>
+                  </svg>
+                  About
+                </a>
+                {% if request.user.is_authenticated %}
+                  <a href="{% url 'users:detail' request.user.uuid %}"
+                     class="nav-link {% active_nav_profile request.user.uuid %}">
+                    <svg class="w-4 h-4 mr-1"
+                         fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
+                      </path>
+                    </svg>
+                    {% translate "My Profile" %}
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+            <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+              <!-- Theme Toggle -->
+              {% include 'includes/theme_toggle.html' %}
+              {% if request.user.is_authenticated %}
+                <!-- User Dropdown -->
+                <div class="relative">
+                  <button type="button"
+                          class="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                          id="user-menu-button"
+                          aria-expanded="false"
+                          data-dropdown-toggle="user-dropdown"
+                          data-dropdown-placement="bottom">
+                    <span class="sr-only">Open user menu</span>
+                    <div class="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
+                      <span class="text-sm font-semibold text-primary-700">{{ request.user.email|first|upper }}</span>
+                    </div>
+                    <svg class="ml-2 h-4 w-4 text-gray-400"
+                         fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+                  <!-- Dropdown menu -->
+                  <div class="z-50 hidden my-4 text-base list-none bg-white dark:bg-slate-800 divide-y divide-gray-100 dark:divide-slate-700 rounded-lg shadow-lg"
+                       id="user-dropdown">
+                    <div class="px-4 py-3">
+                      <span class="block text-sm text-gray-900 dark:text-slate-100">{{ request.user.name|default:"User" }}</span>
+                      <span class="block text-sm text-gray-500 dark:text-slate-400 truncate">{{ request.user.email }}</span>
+                    </div>
+                    <ul class="py-2" aria-labelledby="user-menu-button">
+                      <li>
+                        <a href="{% url 'users:update' %}"
+                           class="block px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-primary-50 dark:hover:bg-slate-700 hover:text-primary-700 dark:hover:text-primary-400 transition-colors">
+                          <svg class="w-4 h-4 mr-2 inline-block"
+                               fill="none"
+                               stroke="currentColor"
+                               viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                          </svg>
+                          Settings
+                        </a>
+                      </li>
+                      <li>
+                        <a href="{% url 'account_logout' %}"
+                           class="block px-4 py-2 text-sm text-gray-700 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-400 transition-colors">
+                          <svg class="w-4 h-4 mr-2 inline-block"
+                               fill="none"
+                               stroke="currentColor"
+                               viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                            </path>
+                          </svg>
+                          {% translate "Sign Out" %}
+                        </a>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              {% else %}
+                <a href="{% url 'account_login' %}" class="btn btn-secondary">{% translate "Sign In" %}</a>
+                {% if ACCOUNT_ALLOW_REGISTRATION %}
+                  <a href="{% url 'account_signup' %}" class="btn btn-primary">{% translate "Sign Up" %}</a>
+                {% endif %}
+              {% endif %}
+            </div>
+            <!-- Mobile menu button -->
+            <div class="-mr-2 flex items-center sm:hidden">
+              <button type="button"
+                      class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-primary-600 hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                      data-collapse-toggle="navbar-default"
+                      aria-controls="navbar-default"
+                      aria-expanded="false">
+                <span class="sr-only">Open main menu</span>
+                <svg class="w-6 h-6"
+                     aria-hidden="true"
+                     fill="currentColor"
+                     viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd">
+                  </path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Mobile menu -->
+        <div class="hidden w-full sm:hidden" id="navbar-default">
+          <ul class="font-medium flex flex-col p-4 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
+            <li>
+              <a href="{% url 'news:home' %}"
+                 class="block py-2 px-3 text-gray-900 rounded hover:bg-primary-100 hover:text-primary-700 transition-colors {% active_nav 'news:home' %}">Home</a>
+            </li>
+            <li>
+              <a href="{% url 'news:for-you' %}"
+                 class="block py-2 px-3 text-gray-900 rounded hover:bg-primary-100 hover:text-primary-700 transition-colors {% active_nav 'news:for-you' %}">For You</a>
+            </li>
+            <li>
+              <a href="{% url 'about' %}"
+                 class="block py-2 px-3 text-gray-900 rounded hover:bg-primary-100 hover:text-primary-700 transition-colors {% active_nav 'about' %}">About</a>
+            </li>
+            {% if request.user.is_authenticated %}
+              <li>
+                <a href="{% url 'users:detail' request.user.uuid %}"
+                   class="block py-2 px-3 text-gray-900 rounded hover:bg-primary-100 hover:text-primary-700 transition-colors {% active_nav_profile request.user.uuid %}">{% translate "My Profile" %}</a>
+              </li>
+              <li>
+                <a href="{% url 'users:update' %}"
+                   class="block py-2 px-3 text-gray-900 rounded hover:bg-primary-100 hover:text-primary-700 transition-colors">Settings</a>
+              </li>
+              <li>
+                <a href="{% url 'account_logout' %}"
+                   class="block py-2 px-3 text-gray-900 rounded hover:bg-red-100 hover:text-red-700 transition-colors">{% translate "Sign Out" %}</a>
+              </li>
+            {% else %}
+              <li>
+                <a href="{% url 'account_login' %}"
+                   class="block py-2 px-3 text-gray-900 rounded hover:bg-primary-100 hover:text-primary-700 transition-colors">{% translate "Sign In" %}</a>
+              </li>
+              {% if ACCOUNT_ALLOW_REGISTRATION %}
+                <li>
+                  <a href="{% url 'account_signup' %}"
+                     class="block py-2 px-3 bg-primary-700 text-white rounded hover:bg-primary-800 transition-colors">{% translate "Sign Up" %}</a>
+                </li>
+              {% endif %}
+            {% endif %}
+          </ul>
+        </div>
+      </nav>
+      <!-- Messages -->
+      {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+          {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}"
+                 x-data="{ show: true }"
+                 x-show="show">
+              <div class="flex justify-between items-center">
+                <span>{{ message }}</span>
+                <button @click="show = false" class="ml-4">
+                  <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <!-- Main Content -->
+      <main class="flex-1">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {% block main %}
+            {% block content %}
+              <div class="text-center py-16">
+                <div class="max-w-md mx-auto">
+                  <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-primary-100 mb-6">
+                    <svg class="h-6 w-6 text-primary-600"
+                         fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z">
+                      </path>
+                    </svg>
+                  </div>
+                  <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4 animate-fade-in">
+                    Welcome to <span class="text-gradient">Newsflow</span>
+                  </h1>
+                  <p class="text-lg text-gray-600 mb-8 animate-slide-in">
+                    Your AI-powered news aggregation platform that intelligently curates content from 100+ global sources
+                  </p>
+                  <div class="space-y-3 sm:space-y-0 sm:space-x-3 sm:flex sm:justify-center">
+                    {% if not request.user.is_authenticated %}
+                      <a href="{% url 'account_signup' %}"
+                         class="btn btn-primary btn-lg w-full sm:w-auto">
+                        Get Started
+                        <svg class="ml-2 h-4 w-4"
+                             fill="none"
+                             stroke="currentColor"
+                             viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                        </svg>
+                      </a>
+                      <a href="{% url 'about' %}"
+                         class="btn btn-secondary btn-lg w-full sm:w-auto">Learn More</a>
+                    {% else %}
+                      <a href="#" class="btn btn-primary btn-lg w-full sm:w-auto">
+                        View Latest News
+                        <svg class="ml-2 h-4 w-4"
+                             fill="none"
+                             stroke="currentColor"
+                             viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                        </svg>
+                      </a>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            {% endblock content %}
+          {% endblock main %}
+        </div>
+      </main>
+    {% endblock body %}
+    {% block modal %}
+    {% endblock modal %}
+    {% block inline_javascript %}
+      {% comment %}
+        Script tags with only code, no src (defer by default).
+      {% endcomment %}
+    {% endblock inline_javascript %}
+  </body>
+</html>
